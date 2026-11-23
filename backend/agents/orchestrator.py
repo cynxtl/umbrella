@@ -372,7 +372,7 @@ def node_weather_only(state: PlanningState) -> PlanningState:
     trace = list(state.get("execution_trace") or [])
     session_id = state.get("session_id", "default")
     ctx = state.get("plan_context", {})
-    demo_mode = state.get("demo_mode", True)
+    demo_mode = state.get("demo_mode", False)
     demo_scenario = state.get("demo_scenario", "Moderate")
     api_key_owm = state.get("api_key_owm")
 
@@ -518,7 +518,7 @@ def node_plan(state: PlanningState) -> PlanningState:
     trace = list(state.get("execution_trace") or [])
     session_id = state.get("session_id", "default")
     ctx = state.get("plan_context", {})
-    demo_mode = state.get("demo_mode", True)
+    demo_mode = state.get("demo_mode", False)
     demo_scenario = state.get("demo_scenario", "Moderate")
     api_key_owm = state.get("api_key_owm")
     api_key_groq = state.get("api_key_groq")
@@ -748,7 +748,7 @@ def node_compare(state: PlanningState) -> PlanningState:
     trace = list(state.get("execution_trace") or [])
     session_id = state.get("session_id", "default")
     ctx = state.get("plan_context", {})
-    demo_mode = state.get("demo_mode", True)
+    demo_mode = state.get("demo_mode", False)
     demo_scenario = state.get("demo_scenario", "Moderate")
     api_key_owm = state.get("api_key_owm")
     api_key_groq = state.get("api_key_groq")
@@ -1041,7 +1041,7 @@ def orchestrate_planning_workflow(
     session_id: str,
     user_prompt: str,
     current_context: Dict[str, Any],
-    demo_mode: bool = True,
+    demo_mode: bool = False,
     demo_scenario: str = "Moderate",
     api_key_owm: Optional[str] = None,
     api_key_groq: Optional[str] = None,

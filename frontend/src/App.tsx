@@ -16,10 +16,17 @@ export function App() {
   // Persistent confirmed location: null displays 'Choose location'
   const [currentLocation, setCurrentLocation] = useState<LocationItem | null>(null);
 
-  // Settings
-  const [demoMode, setDemoMode] = useState<boolean>(true);
-  const [demoScenario, setDemoScenario] = useState<string>('Moderate');
-  const [unit, setUnit] = useState<string>('°C');
+  // Settings - default to live weather mode (demoMode: false)
+  const [demoMode, setDemoMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('umbrella_demo_mode');
+    return saved === 'true';
+  });
+  const [demoScenario, setDemoScenario] = useState<string>(() => {
+    return localStorage.getItem('umbrella_demo_scenario') || 'Moderate';
+  });
+  const [unit, setUnit] = useState<string>(() => {
+    return localStorage.getItem('umbrella_unit') || '°C';
+  });
   const [preference, setPreference] = useState<string>('Balanced');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -269,11 +276,20 @@ export function App() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         demoMode={demoMode}
-        onToggleDemoMode={setDemoMode}
+        onToggleDemoMode={(val) => {
+          setDemoMode(val);
+          localStorage.setItem('umbrella_demo_mode', String(val));
+        }}
         demoScenario={demoScenario}
-        onChangeDemoScenario={setDemoScenario}
+        onChangeDemoScenario={(scen) => {
+          setDemoScenario(scen);
+          localStorage.setItem('umbrella_demo_scenario', scen);
+        }}
         unit={unit}
-        onChangeUnit={setUnit}
+        onChangeUnit={(u) => {
+          setUnit(u);
+          localStorage.setItem('umbrella_unit', u);
+        }}
         preference={preference}
         onChangePreference={(p) => {
           setPreference(p);

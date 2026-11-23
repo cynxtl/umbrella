@@ -140,7 +140,7 @@ def fetch_weather(
     lat: Optional[float] = None,
     lon: Optional[float] = None,
     api_key: Optional[str] = None,
-    demo_mode: bool = True,
+    demo_mode: bool = False,
     demo_scenario: str = "Moderate",
 ) -> dict:
     if demo_mode:

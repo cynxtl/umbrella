@@ -33,7 +33,7 @@ class ChatRequest(BaseModel):
     end_time: Optional[str] = None
     flexibility_hours: Optional[int] = None
     preference: Optional[str] = None
-    demo_mode: Optional[bool] = True
+    demo_mode: Optional[bool] = False
     demo_scenario: Optional[str] = "Moderate"
 
 class ForecastSlot(BaseModel):
@@ -118,7 +118,7 @@ class LocationSwitchRequest(BaseModel):
     lat: Optional[float] = None
     lon: Optional[float] = None
     display_name: Optional[str] = None
-    demo_mode: Optional[bool] = True
+    demo_mode: Optional[bool] = False
     demo_scenario: Optional[str] = "Moderate"
 
 class LocationSwitchResponse(BaseModel):

@@ -26,7 +26,7 @@ def geocode_city(
 @router.get("/forecast")
 def get_weather(
     location: str = Query("Pune"),
-    demo_mode: bool = Query(True),
+    demo_mode: bool = Query(False),
     demo_scenario: str = Query("Moderate"),
 ) -> dict:
     return fetch_weather(

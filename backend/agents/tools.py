@@ -12,7 +12,7 @@ def tool_weather_retrieval(
     lat: Optional[float] = None,
     lon: Optional[float] = None,
     api_key: Optional[str] = None,
-    demo_mode: bool = True,
+    demo_mode: bool = False,
     demo_scenario: str = "Moderate",
 ) -> Dict[str, Any]:
     """Explicit Tool 1: Retrieve validated forecast timeline."""
