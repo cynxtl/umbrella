@@ -903,9 +903,11 @@ def node_compare(state: PlanningState) -> PlanningState:
 
     if comparison["has_better_alternative"]:
         best = comparison["recommended_plan"]
+        orig_p = comparison["original_plan"].get("peak_pop", comparison["original_plan"].get("rain_probability", 0.0))
+        best_p = best.get("peak_pop", best.get("rain_probability", 0.0))
         fallback_explanation = (
             f"A better window is available: shifting your {ctx['activity_type'].lower()} to {best['start_time']}–{best['end_time']} "
-            f"reduces rain risk from {comparison['original_plan']['rain_probability']:.0%} down to {best['rain_probability']:.0%} "
+            f"reduces rain risk from {orig_p:.0%} down to {best_p:.0%} "
             f"({comparison['risk_reduction_pp']:.0f}% reduction)."
         )
     else:
