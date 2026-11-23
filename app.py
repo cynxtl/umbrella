@@ -1,19 +1,20 @@
-"""Umbrella 2.0: Context-Aware Weather Planning and Adaptive Decision-Making.
+"""Umbrella 2.0: Deep-Black, Monochromatic, Conversation-First Weather Planning Assistant.
 
-A premium SaaS-grade Streamlit application featuring:
-- Dark atmospheric glassmorphism visual system
-- Activity-aware weather planning
-- Flagship Differentiator: Adaptive Plan Comparison
-- Bounded LangGraph Planning Orchestrator with auditable execution trace
-- 3 Collaborating Specialist Roles (Forecast Analyst, Risk Assessor, Planning Coordinator)
-- Feedback-aware SQLite persistent memory + session memory
-- Dark-styled Altair forecast analytics
-- Safe credential injection (zero os.environ pollution)
+Minimal AI assistant design:
+- Pure black canvas (#000000), deep slate (#0D0D0D), white accents (#FFFFFF), muted text (#A3A3A3, #737373)
+- Understated header: ☂ umbrella. (zero oversized SVG banners)
+- Conversational-first landing: centered greeting, prompt chips, native chat interface
+- Context-aware follow-up engine:
+  - "I have college tomorrow from 9 to 4. Should I carry an umbrella?"
+  - "What if I leave at 5?"
+  - "Find me a better time."
+- Compact inline recommendation cards, side-by-side plan comparisons, expandable analytics
+- Preserved LangGraph Planning Orchestrator, 3 roles, SQLite persistent memory, and offline demo
 """
 from __future__ import annotations
 
 import os
-import base64
+import re
 import html
 import uuid
 from pathlib import Path
@@ -37,1314 +38,684 @@ from agent import (
 import memory
 
 ROOT = Path(__file__).resolve().parent
-
-# Load local .env without overwriting global process environment
 ENV_VARS = dotenv_values(ROOT / ".env")
 
 st.set_page_config(
-    page_title="Umbrella — Context-Aware Weather Planning",
-    page_icon="☂️",
+    page_title="umbrella.",
+    page_icon="☂",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
-# ---------- Visual System: Dark Atmospheric Glassmorphism ----------
+# ---------- Monochromatic, Deep-Black Glassmorphic Styles ----------
 st.markdown(
     """
 <style>
+/* Base Theme */
 :root {
-    --color-midnight: #0B1020;
-    --color-slate: #121B2E;
-    --color-atmospheric: #182B46;
-    --color-ice-blue: #82B9EB;
-    --color-frost-white: #E8F3FF;
-    --color-muted: #9BAEC6;
-    --color-soft-green: #70C8A0;
-    --color-soft-amber: #E9BF72;
-    --color-muted-coral: #E88C8C;
+    --bg-main: #000000;
+    --bg-surface: #0D0D0D;
+    --glass-bg: rgba(255, 255, 255, 0.035);
+    --glass-border: rgba(255, 255, 255, 0.10);
+    --text-primary: #FFFFFF;
+    --text-secondary: #A3A3A3;
+    --text-muted: #737373;
+    --accent-low: #70C8A0;
+    --accent-mod: #E9BF72;
+    --accent-high: #E88C8C;
 }
 
-/* Background composition */
 .stApp {
-    background: radial-gradient(circle at 18% 12%, rgba(24, 43, 70, 0.45) 0%, transparent 45%),
-                radial-gradient(circle at 85% 80%, rgba(18, 27, 46, 0.6) 0%, transparent 50%),
-                #0B1020;
-    color: #E8F3FF;
+    background-color: var(--bg-main) !important;
+    color: var(--text-primary) !important;
 }
 
 [data-testid="stHeader"] {
-    background: rgba(11, 16, 32, 0.85);
-    backdrop-filter: blur(16px);
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
 }
 
 .block-container {
-    max-width: 1440px;
-    padding-top: 2.8rem;
-    padding-bottom: 3.5rem;
+    max-width: 920px;
+    padding-top: 1.5rem;
+    padding-bottom: 5.5rem;
 }
 
 [data-testid="stSidebar"] {
-    background: #121B2E !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--bg-surface) !important;
+    border-right: 1px solid var(--glass-border) !important;
 }
-[data-testid="stSidebar"] > div:first-child {
-    padding-top: 1.2rem;
-}
-[data-testid="stSidebar"] h3 {
-    color: #E8F3FF;
-    font-size: 0.98rem;
-    letter-spacing: -0.015em;
-}
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
-    color: #9BAEC6;
-}
-[data-testid="stSidebar"] hr {
-    border-color: rgba(255, 255, 255, 0.08);
+[data-testid="stSidebar"] h3, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {
+    color: var(--text-primary) !important;
 }
 
-/* Glassmorphism Surface Tokens */
-.glass-panel {
-    background: rgba(255, 255, 255, 0.045);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 20px;
-    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    padding: 22px 24px;
-    margin-bottom: 18px;
-}
-
-.glass-card-compact {
-    background: rgba(255, 255, 255, 0.035);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-    padding: 16px 18px;
-    height: 100%;
-}
-
-/* Header & Hero */
-.app-header {
+/* Minimal Header */
+.top-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
-    margin-bottom: 20px;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
+    padding: 10px 0 20px 0;
+    border-bottom: 1px solid var(--glass-border);
+    margin-bottom: 24px;
 }
-.brand-group {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-.brand-group img {
-    width: 44px;
-    height: 44px;
-    object-fit: contain;
-}
-.brand-text h1 {
-    font-size: 1.45rem;
-    font-weight: 800;
-    margin: 0;
-    color: #E8F3FF;
-    letter-spacing: -0.03em;
+.brand-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.brand-text h1 span {
-    color: #82B9EB;
-}
-.brand-text p {
-    font-size: 0.78rem;
-    color: #9BAEC6;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+.brand-title span {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 0.82rem;
+    margin-left: 6px;
 }
 
-.hero-box {
-    background: linear-gradient(135deg, rgba(24, 43, 70, 0.5) 0%, rgba(18, 27, 46, 0.7) 100%);
-    backdrop-filter: blur(24px);
-    border: 1px solid rgba(130, 185, 235, 0.22);
-    border-radius: 24px;
-    padding: 26px 30px;
-    margin-bottom: 22px;
-    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+/* Landing Greeting */
+.landing-hero {
+    text-align: center;
+    padding: 48px 16px 32px 16px;
 }
-.hero-eyebrow {
-    color: #82B9EB;
-    font-size: 0.75rem;
+.landing-hero h1 {
+    font-size: clamp(2rem, 4vw, 2.85rem);
     font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-bottom: 6px;
-}
-.hero-title {
-    font-size: clamp(1.8rem, 3.2vw, 2.6rem);
-    font-weight: 850;
-    line-height: 1.12;
+    color: var(--text-primary);
     letter-spacing: -0.04em;
-    color: #E8F3FF;
-    margin: 0 0 8px 0;
+    margin: 0 0 10px 0;
 }
-.hero-meta {
+.landing-hero p {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Chips Container */
+.chips-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    margin-bottom: 30px;
+}
+
+/* Inline Glass Cards */
+.inline-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin: 12px 0;
+}
+
+.rec-title {
+    font-size: 1.15rem;
+    font-weight: 750;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+}
+
+.rec-meta {
     display: flex;
     align-items: center;
-    gap: 12px;
-    color: #9BAEC6;
-    font-size: 0.95rem;
-    margin-bottom: 18px;
+    gap: 8px;
     flex-wrap: wrap;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
 }
 
-/* Badges & Pills */
-.pill {
+/* Semantic Badges */
+.badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    border-radius: 999px;
-    padding: 4px 11px;
-    font-weight: 750;
-    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 6px;
     font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
 }
-.pill-live { color: #70C8A0; background: rgba(112, 200, 160, 0.12); border: 1px solid rgba(112, 200, 160, 0.28); }
-.pill-demo { color: #E9BF72; background: rgba(233, 191, 114, 0.12); border: 1px solid rgba(233, 191, 114, 0.28); }
-.pill-low { color: #70C8A0; background: rgba(112, 200, 160, 0.14); border: 1px solid rgba(112, 200, 160, 0.3); }
-.pill-moderate { color: #E9BF72; background: rgba(233, 191, 114, 0.14); border: 1px solid rgba(233, 191, 114, 0.3); }
-.pill-high { color: #E88C8C; background: rgba(232, 140, 140, 0.14); border: 1px solid rgba(232, 140, 140, 0.3); }
-
-/* Recommendation Banner */
-.rec-card {
-    border-radius: 18px;
-    padding: 20px 22px;
-    margin: 12px 0 16px;
-    background: linear-gradient(135deg, rgba(130, 185, 235, 0.12) 0%, rgba(24, 43, 70, 0.25) 100%);
-    border: 1px solid rgba(130, 185, 235, 0.3);
+.badge-low {
+    color: var(--accent-low);
+    background: rgba(112, 200, 160, 0.12);
+    border: 1px solid rgba(112, 200, 160, 0.25);
 }
-.rec-big {
-    font-size: clamp(1.28rem, 2.2vw, 1.85rem);
-    font-weight: 850;
-    line-height: 1.22;
-    letter-spacing: -0.035em;
-    color: #E8F3FF;
+.badge-moderate {
+    color: var(--accent-mod);
+    background: rgba(233, 191, 114, 0.12);
+    border: 1px solid rgba(233, 191, 114, 0.25);
 }
-.rec-support {
-    color: #9BAEC6;
-    font-size: 0.90rem;
-    margin-top: 8px;
-    line-height: 1.5;
+.badge-high {
+    color: var(--accent-high);
+    background: rgba(232, 140, 140, 0.12);
+    border: 1px solid rgba(232, 140, 140, 0.25);
+}
+.badge-mono {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--glass-border);
 }
 
-/* Metric styling */
-div[data-testid="stMetric"] {
-    background: rgba(255, 255, 255, 0.038) !important;
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 16px !important;
-    padding: 14px 18px !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
-}
-div[data-testid="stMetricLabel"] {
-    color: #9BAEC6 !important;
-    font-size: 0.78rem !important;
-    font-weight: 600;
-}
-div[data-testid="stMetricValue"] {
-    color: #E8F3FF !important;
-    font-weight: 850 !important;
-    letter-spacing: -0.03em !important;
-}
-
-/* Tabs & Inputs */
-[data-testid="stTabs"] button[role="tab"] {
-    color: #9BAEC6;
-    font-weight: 750;
-    font-size: 0.92rem;
-    padding: 10px 18px;
-}
-[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-    color: #82B9EB !important;
-    border-bottom: 2px solid #82B9EB !important;
-}
-
-.stTextInput input, .stSelectbox [data-baseweb="select"], .stTimeInput input {
-    background: rgba(18, 27, 46, 0.75) !important;
-    color: #E8F3FF !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 12px !important;
-}
-.stButton > button, .stFormSubmitButton > button {
-    border-radius: 12px;
-    font-weight: 750;
-    transition: all 0.2s ease;
-}
-.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #82B9EB 0%, #4D8BC9 100%) !important;
-    color: #0B1020 !important;
-    border: none !important;
-    box-shadow: 0 4px 18px rgba(130, 185, 235, 0.28);
-}
-.stButton > button[kind="primary"]:hover, .stFormSubmitButton > button[kind="primary"]:hover {
-    background: linear-gradient(135deg, #9AC7F2 0%, #5E9CE0 100%) !important;
-    box-shadow: 0 6px 24px rgba(130, 185, 235, 0.42);
-}
-
-/* Adaptive Comparison Cards */
-.comp-grid {
+/* Adaptive Comparison Inline Grid */
+.plan-comp-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 18px;
-    margin: 16px 0;
+    gap: 12px;
+    margin: 10px 0;
 }
-.plan-card {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(18px);
-    border-radius: 18px;
-    padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    position: relative;
-}
-.plan-card.recommended {
-    border: 1px solid rgba(130, 185, 235, 0.45);
-    background: linear-gradient(135deg, rgba(130, 185, 235, 0.09) 0%, rgba(24, 43, 70, 0.3) 100%);
-    box-shadow: 0 10px 30px rgba(130, 185, 235, 0.12);
-}
-.plan-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-.plan-title {
-    font-size: 0.85rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #9BAEC6;
-}
-.plan-time {
-    font-size: 1.45rem;
-    font-weight: 850;
-    color: #E8F3FF;
-    letter-spacing: -0.03em;
-    margin-bottom: 6px;
-}
-.plan-pop {
-    font-size: 2.1rem;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    color: #82B9EB;
-}
-
-/* Execution Trace & Role Cards */
-.trace-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 14px 18px;
-    margin: 8px 0;
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-}
-.trace-num {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    background: rgba(130, 185, 235, 0.15);
-    color: #82B9EB;
-    font-weight: 850;
-    font-size: 0.82rem;
-    flex-shrink: 0;
-}
-.trace-title {
-    font-size: 0.94rem;
-    font-weight: 800;
-    color: #E8F3FF;
-}
-.trace-desc {
-    color: #9BAEC6;
-    font-size: 0.82rem;
-    margin-top: 3px;
-}
-
-/* Custom expanders, dataframes, insight notes */
-.insight-note {
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 14px 18px;
-    margin: 8px 0;
-    color: #9BAEC6;
-    line-height: 1.55;
-    font-size: 0.88rem;
-}
-.insight-note strong {
-    color: #E8F3FF;
-}
-[data-testid="stExpander"] {
-    background: rgba(255, 255, 255, 0.028) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 14px !important;
-}
-[data-testid="stDataFrame"] {
-    border: 1px solid rgba(255, 255, 255, 0.08);
+.comp-box {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--glass-border);
     border-radius: 12px;
+    padding: 12px 14px;
 }
+.comp-box.better {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+}
+.comp-box-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.comp-box-time {
+    font-size: 1.05rem;
+    font-weight: 750;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+.comp-box-pop {
+    font-size: 1.35rem;
+    font-weight: 850;
+    color: var(--text-primary);
+}
+
+/* Button & Form Elements */
+.stButton > button {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    border-radius: 9px !important;
+    font-weight: 700 !important;
+    border: none !important;
+    transition: opacity 0.15s ease;
+}
+.stButton > button:hover {
+    opacity: 0.88;
+}
+
+/* Chat Input Styling */
+[data-testid="stChatInput"] {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 16px !important;
+    padding: 4px 8px !important;
+}
+[data-testid="stChatInput"] textarea {
+    color: var(--text-primary) !important;
+    background: transparent !important;
+}
+
+[data-testid="stExpander"] {
+    background: transparent !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 12px !important;
+    margin: 6px 0 !important;
+}
+
+/* Trace Step Details */
+.trace-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.trace-row:last-child { border-bottom: none; }
+
 footer { visibility: hidden; }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
-
-# ---------- Session State & Persistent Memory Sync ----------
+# ---------- State Initialization & Sync ----------
 stored_pref, stored_adj = memory.load_user_preference()
 
 for key, default in {
-    "weather_history": [],
-    "last_result": None,
-    "feedback_adjustment": stored_adj,
+    "messages": [],
     "user_preference": stored_pref,
-    "feedback_events": [],
-    "last_location": "Pune",
-    "activity_type": "College",
-    "start_time": "09:00",
-    "end_time": "16:00",
-    "flexibility_hours": 2,
-    "feedback_message": "",
-    "api_key_owm_input": ENV_VARS.get("OPENWEATHER_API_KEY", ""),
-    "api_key_groq_input": ENV_VARS.get("GROQ_API_KEY", ""),
+    "feedback_adjustment": stored_adj,
+    "current_plan": {
+        "location": "Pune",
+        "activity_type": "General",
+        "start_time": "09:00",
+        "end_time": "17:00",
+        "flexibility_hours": 3,
+    },
+    "last_result": None,
+    "api_key_owm": ENV_VARS.get("OPENWEATHER_API_KEY", ""),
+    "api_key_groq": ENV_VARS.get("GROQ_API_KEY", ""),
+    "demo_mode": True,
+    "demo_scenario": "Moderate",
+    "unit": "°C",
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
 
 
-def esc(value) -> str:
-    return html.escape(str(value if value is not None else "—"), quote=True)
+# ---------- Natural Language Intent & Parameter Parser ----------
+def parse_time_token(t_str: str, default_is_pm: bool = False) -> str | None:
+    t_str = t_str.strip().lower()
+    m = re.match(r"^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$", t_str)
+    if not m:
+        return None
+    h = int(m.group(1))
+    mins = int(m.group(2) or 0)
+    period = m.group(3)
+    if period == "pm" and h < 12:
+        h += 12
+    elif period == "am" and h == 12:
+        h = 0
+    elif period is None:
+        if default_is_pm and h < 12:
+            h += 12
+        elif not default_is_pm and h < 7:
+            h += 12  # e.g. 4 -> 16:00
+    return f"{h:02d}:{mins:02d}"
 
 
-def to_display_temp(celsius: float, unit: str) -> float:
-    return celsius if unit == "°C" else celsius * 9 / 5 + 32
+def parse_user_query(query: str, ctx: dict) -> tuple[dict, str]:
+    """Parse user query into updated plan context and user intent."""
+    q = query.strip().lower()
+    new_ctx = dict(ctx)
+    intent = "plan"
+
+    # 1. Reset / Clear
+    if re.search(r"\b(reset|clear|restart|start over)\b", q):
+        return new_ctx, "reset"
+
+    # 2. Evidence / Why
+    if re.search(r"\b(why|why this|evidence|reason|how did|trace|steps)\b", q):
+        return new_ctx, "why"
+
+    # 3. Analytics / Chart
+    if re.search(r"\b(chart|graph|timeline|analytics|curve|temperature)\b", q):
+        return new_ctx, "analytics"
+
+    # 4. Adaptive comparison / Better time
+    if re.search(r"\b(better time|alternative|compare|reschedule|avoid rain|shift|earlier|later|flexib)\b", q):
+        intent = "compare"
+        new_ctx["flexibility_hours"] = max(2, new_ctx.get("flexibility_hours", 3))
+
+    # 5. Extract Location
+    loc_match = re.search(r"\b(?:in|for|at)\s+([a-zA-Z\s]+?)(?:\s+tomorrow|\s+from|\s+between|\?|\.|$)", query, re.IGNORECASE)
+    if loc_match:
+        loc = loc_match.group(1).strip()
+        if len(loc) > 2 and loc.lower() not in {"college", "office", "walk", "home", "work"}:
+            new_ctx["location"] = loc.title()
+
+    # 6. Extract Activity
+    if re.search(r"\b(college|class|lecture|campus|university)\b", q):
+        new_ctx["activity_type"] = "College"
+    elif re.search(r"\b(office|work|commute|job)\b", q):
+        new_ctx["activity_type"] = "Office commute"
+    elif re.search(r"\b(walk|jog|run|stroll)\b", q):
+        new_ctx["activity_type"] = "Walking"
+    elif re.search(r"\b(outdoor|event|game|match|picnic|party)\b", q):
+        new_ctx["activity_type"] = "Outdoor event"
+    elif re.search(r"\b(travel|flight|drive|trip)\b", q):
+        new_ctx["activity_type"] = "Travel"
+
+    # 7. Extract Time Window
+    # Range: e.g. "from 9 to 4", "9am to 4pm", "9 to 16", "between 2 and 6"
+    range_match = re.search(
+        r"(?:from\s+|between\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*(?:to|-|and)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)",
+        q,
+    )
+    if range_match:
+        t1_raw = range_match.group(1)
+        t2_raw = range_match.group(2)
+        # If t2 looks like afternoon/evening without am/pm and is smaller than t1 (e.g. 9 to 4)
+        t1 = parse_time_token(t1_raw, default_is_pm=False)
+        t2 = parse_time_token(t2_raw, default_is_pm=True)
+        if t1 and t2:
+            new_ctx["start_time"] = t1
+            new_ctx["end_time"] = t2
+    else:
+        # Follow-up single time: "what if I leave at 5", "stay until 4", "leave at 17:00"
+        leave_match = re.search(r"(?:leave\s+at|leave\s+by|until|till|stay\s+until|end\s+at)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)", q)
+        if leave_match:
+            end_t = parse_time_token(leave_match.group(1), default_is_pm=True)
+            if end_t:
+                new_ctx["end_time"] = end_t
+                intent = "plan"
+        else:
+            # Single event time: "around 5 pm", "at 4", "at 6pm"
+            single_match = re.search(r"(?:around|at|by)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)", q)
+            if single_match and intent != "compare":
+                st_t = parse_time_token(single_match.group(1), default_is_pm=True)
+                if st_t:
+                    new_ctx["start_time"] = st_t
+                    # default 2h activity
+                    sh = int(st_t.split(":")[0])
+                    new_ctx["end_time"] = f"{(sh + 2) % 24:02d}:00"
+                    intent = "plan"
+
+    return new_ctx, intent
 
 
-def risk_for_probability(pop: float) -> str:
-    if pop < LOW_THRESHOLD:
-        return "LOW"
-    if pop < HIGH_THRESHOLD:
-        return "MODERATE"
-    return "HIGH"
+def get_risk_badge_html(risk: str, pop: float | None = None) -> str:
+    r = str(risk).upper()
+    css = {"LOW": "badge-low", "MODERATE": "badge-moderate", "HIGH": "badge-high"}.get(r, "badge-moderate")
+    text = f"{r} RISK" if pop is None else f"{r} RISK · {pop:.0%}"
+    return f'<span class="badge {css}">{text}</span>'
 
 
-def get_risk_pill_html(risk: str) -> str:
-    risk_upper = str(risk).upper()
-    css = {
-        "LOW": "pill-low",
-        "MODERATE": "pill-moderate",
-        "HIGH": "pill-high",
-    }.get(risk_upper, "pill-moderate")
-    return f'<span class="pill {css}">{esc(risk_upper)} RISK</span>'
+def esc(val) -> str:
+    return html.escape(str(val if val is not None else "—"), quote=True)
 
 
-def make_timeline(result: dict, unit: str) -> pd.DataFrame:
+# ---------- Chart Helper ----------
+def render_dark_timeline_chart(timeline: list[dict], unit: str) -> alt.Chart:
     rows = []
-    for index, slot in enumerate(result.get("forecast_timeline") or []):
-        probability = max(0.0, min(1.0, float(slot.get("rain_probability", 0.0))))
-        celsius = float(slot.get("temperature", result.get("temperature", 0.0)))
+    for slot in timeline:
+        p = float(slot.get("rain_probability", 0.0))
+        t = float(slot.get("temperature", 20.0))
+        t_disp = t if unit == "°C" else t * 9 / 5 + 32
         rows.append({
-            "Slot": index + 1,
-            "Time": str(slot.get("time", f"Slot {index + 1}")),
-            "Rain probability (%)": round(probability * 100, 1),
-            f"Temperature ({unit})": round(to_display_temp(celsius, unit), 1),
-            "Conditions": str(slot.get("description", "Not specified")),
-            "Risk band": risk_for_probability(probability),
+            "Time": str(slot.get("time")),
+            "Rain probability (%)": round(p * 100, 1),
+            f"Temperature ({unit})": round(t_disp, 1),
+            "Conditions": slot.get("description", "Clear"),
         })
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    order = df["Time"].tolist()
 
-
-def dark_rain_chart(frame: pd.DataFrame) -> alt.Chart:
-    order = frame["Time"].tolist()
-    base = alt.Chart(frame).encode(
-        x=alt.X(
-            "Time:N",
-            sort=order,
-            title=None,
-            axis=alt.Axis(labelAngle=0, labelColor="#9BAEC6", tickSize=0, domain=False),
-        ),
+    base = alt.Chart(df).encode(
+        x=alt.X("Time:N", sort=order, title=None, axis=alt.Axis(labelAngle=0, labelColor="#A3A3A3", tickSize=0, domain=False)),
         tooltip=[
-            alt.Tooltip("Time:N", title="Forecast time"),
-            alt.Tooltip("Rain probability (%):Q", title="Rain probability", format=".1f"),
-            alt.Tooltip("Risk band:N", title="Risk band"),
-            alt.Tooltip("Conditions:N", title="Conditions"),
+            alt.Tooltip("Time:N", title="Time"),
+            alt.Tooltip("Rain probability (%):Q", title="Rain Risk", format=".1f"),
+            alt.Tooltip(f"Temperature ({unit}):Q", title="Temp", format=".1f"),
+            alt.Tooltip("Conditions:N", title="Weather"),
         ],
     )
-    area = base.mark_area(
-        color="#82B9EB",
-        opacity=0.18,
-        interpolate="monotone",
-    ).encode(
-        y=alt.Y(
-            "Rain probability (%):Q",
-            title="Chance of rain",
-            scale=alt.Scale(domain=[0, 100]),
-            axis=alt.Axis(
-                labelColor="#9BAEC6",
-                gridColor="rgba(255,255,255,0.07)",
-                titleColor="#9BAEC6",
-                ticks=False,
-                domain=False,
-            ),
-        )
+    area = base.mark_area(color="#FFFFFF", opacity=0.08, interpolate="monotone").encode(
+        y=alt.Y("Rain probability (%):Q", scale=alt.Scale(domain=[0, 100]), axis=alt.Axis(labelColor="#737373", gridColor="rgba(255,255,255,0.06)", ticks=False, domain=False))
     )
-    line = base.mark_line(
-        color="#82B9EB",
-        strokeWidth=3,
-        point=alt.OverlayMarkDef(
-            filled=True,
-            fill="#E8F3FF",
-            stroke="#82B9EB",
-            strokeWidth=2,
-            size=70,
-        ),
-        interpolate="monotone",
-    ).encode(y="Rain probability (%):Q")
-
-    moderate = (
-        alt.Chart(pd.DataFrame({"threshold": [LOW_THRESHOLD * 100]}))
-        .mark_rule(color="#E9BF72", strokeDash=[6, 4], strokeWidth=1.5)
-        .encode(y="threshold:Q")
+    line = base.mark_line(color="#FFFFFF", strokeWidth=2.2, point=alt.OverlayMarkDef(filled=True, fill="#000000", stroke="#FFFFFF", strokeWidth=2, size=55), interpolate="monotone").encode(
+        y="Rain probability (%):Q"
     )
-    high = (
-        alt.Chart(pd.DataFrame({"threshold": [HIGH_THRESHOLD * 100]}))
-        .mark_rule(color="#E88C8C", strokeDash=[4, 4], strokeWidth=1.5)
-        .encode(y="threshold:Q")
-    )
+    mod_rule = alt.Chart(pd.DataFrame({"y": [LOW_THRESHOLD * 100]})).mark_rule(color="#E9BF72", strokeDash=[4, 4], strokeWidth=1.2).encode(y="y:Q")
+    high_rule = alt.Chart(pd.DataFrame({"y": [HIGH_THRESHOLD * 100]})).mark_rule(color="#E88C8C", strokeDash=[3, 3], strokeWidth=1.2).encode(y="y:Q")
 
-    return (
-        (area + line + moderate + high)
-        .properties(height=280, background="transparent")
-        .configure_view(stroke=None)
-        .configure_axis(
-            labelFont="sans-serif",
-            titleFont="sans-serif",
-            labelFontSize=11,
-            titleFontSize=11,
-        )
-    )
+    return (area + line + mod_rule + high_rule).properties(height=200, background="transparent").configure_view(stroke=None)
 
 
-def dark_temperature_chart(frame: pd.DataFrame, unit: str) -> alt.Chart:
-    order = frame["Time"].tolist()
-    temp_column = f"Temperature ({unit})"
-    return (
-        alt.Chart(frame)
-        .mark_line(
-            color="#70C8A0",
-            strokeWidth=2.8,
-            point=alt.OverlayMarkDef(
-                filled=True,
-                fill="#E8F3FF",
-                stroke="#70C8A0",
-                strokeWidth=2,
-                size=60,
-            ),
-            interpolate="monotone",
-        )
-        .encode(
-            x=alt.X(
-                "Time:N",
-                sort=order,
-                title=None,
-                axis=alt.Axis(labelAngle=0, labelColor="#9BAEC6", tickSize=0, domain=False),
-            ),
-            y=alt.Y(
-                f"{temp_column}:Q",
-                title=f"Temperature ({unit})",
-                axis=alt.Axis(
-                    labelColor="#9BAEC6",
-                    titleColor="#9BAEC6",
-                    gridColor="rgba(255,255,255,0.07)",
-                    domain=False,
-                    ticks=False,
-                ),
-            ),
-            tooltip=[
-                alt.Tooltip("Time:N", title="Forecast time"),
-                alt.Tooltip(f"{temp_column}:Q", title="Temperature", format=".1f"),
-                alt.Tooltip("Conditions:N", title="Conditions"),
-            ],
-        )
-        .properties(height=240, background="transparent")
-        .configure_view(stroke=None)
-        .configure_axis(
-            labelFont="sans-serif",
-            titleFont="sans-serif",
-            labelFontSize=11,
-            titleFontSize=11,
-        )
-    )
-
-
-def dark_risk_distribution_chart(frame: pd.DataFrame) -> alt.Chart:
-    levels = ["LOW", "MODERATE", "HIGH"]
-    counts = (
-        frame["Risk band"]
-        .value_counts()
-        .reindex(levels, fill_value=0)
-        .rename_axis("Risk band")
-        .reset_index(name="Forecast slots")
-    )
-    return (
-        alt.Chart(counts)
-        .mark_bar(cornerRadiusEnd=6, size=24)
-        .encode(
-            y=alt.Y(
-                "Risk band:N",
-                sort=levels,
-                title=None,
-                axis=alt.Axis(labelColor="#9BAEC6", domain=False, ticks=False),
-            ),
-            x=alt.X(
-                "Forecast slots:Q",
-                title="Forecast slots (3h blocks)",
-                axis=alt.Axis(
-                    labelColor="#9BAEC6",
-                    titleColor="#9BAEC6",
-                    gridColor="rgba(255,255,255,0.07)",
-                    ticks=False,
-                    domain=False,
-                ),
-            ),
-            color=alt.Color(
-                "Risk band:N",
-                scale=alt.Scale(domain=levels, range=["#70C8A0", "#E9BF72", "#E88C8C"]),
-                legend=None,
-            ),
-            tooltip=["Risk band:N", "Forecast slots:Q"],
-        )
-        .properties(height=160, background="transparent")
-        .configure_view(stroke=None)
-        .configure_axis(
-            labelFont="sans-serif",
-            titleFont="sans-serif",
-            labelFontSize=11,
-            titleFontSize=11,
-        )
-    )
-
-
-def append_history(result: dict, location: str, demo: bool):
-    check_id = uuid.uuid4().hex[:10]
-    result["_check_id"] = check_id
-    pop = float(result.get("rain_probability", 0.0))
-    risk = str(result.get("risk_level", "—"))
-    rec = str(result.get("personalized_recommendation", result.get("recommendation", "—")))
-    act_type = str(result.get("activity_type", "General"))
-    start_t = str(result.get("start_time", ""))
-    end_t = str(result.get("end_time", ""))
-
-    entry = {
-        "check_id": check_id,
-        "location": location.strip(),
-        "activity": act_type,
-        "time_window": f"{start_t}–{end_t}" if start_t else "Full day",
-        "rain_probability": pop,
-        "risk_level": risk,
-        "recommendation": rec,
-        "checked_at": datetime.now().strftime("%d %b %Y, %I:%M %p"),
-        "demo": bool(demo),
-    }
-    st.session_state.weather_history.append(entry)
-    st.session_state.weather_history = st.session_state.weather_history[-25:]
-
-    # Persist to SQLite memory asynchronously/safely
-    memory.save_activity_record(
-        location=location,
-        activity_type=act_type,
-        rain_probability=pop,
-        risk_level=risk,
-        recommendation=rec,
-        start_time=start_t,
-        end_time=end_t,
-        is_demo=bool(demo),
-    )
-
-
-# ---------- Load Logo ----------
-logo_path = ROOT / "umbrella_mark.svg"
-if not logo_path.exists():
-    logo_path = ROOT / "umbrella_logo.svg"
-try:
-    svg_b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
-    logo_html = f'<img src="data:image/svg+xml;base64,{svg_b64}" alt="Umbrella Logo" />'
-except OSError:
-    logo_html = '<div style="font-size:2.4rem">☂️</div>'
-
-# ---------- Top Navigation Bar ----------
-st.markdown(
-    f"""
-<div class="app-header">
-    <div class="brand-group">
-        {logo_html}
-        <div class="brand-text">
-            <h1>umbrella<span>.</span></h1>
-            <p>Planning Intelligence · Agentic AI System</p>
-        </div>
-    </div>
-    <div style="display:flex; align-items:center; gap:10px;">
-        <span class="pill pill-live">Agentic Orchestration</span>
-        <span class="pill pill-demo">Deterministic Truth</span>
-    </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-# ---------- Sidebar ----------
+# ---------- Sidebar Configuration ----------
 with st.sidebar:
-    st.markdown("### Settings & Credentials")
-    st.caption("Safe credential injection: keys are passed to agent instances without altering process environment.")
+    st.markdown("### Settings")
+    st.session_state.demo_mode = st.toggle("Offline jury demo", value=st.session_state.demo_mode)
+    if st.session_state.demo_mode:
+        st.session_state.demo_scenario = st.selectbox("Demo scenario", ["Moderate", "Low", "High"], index=["Moderate", "Low", "High"].index(st.session_state.demo_scenario))
+    else:
+        st.session_state.api_key_owm = st.text_input("OpenWeather API Key", value=st.session_state.api_key_owm, type="password")
 
-    owm_key_input = st.text_input(
-        "OpenWeather API key",
-        value=st.session_state.api_key_owm_input,
-        type="password",
-        help="Required for live weather forecasts.",
-    )
-    st.session_state.api_key_owm_input = owm_key_input.strip()
-
-    groq_key_input = st.text_input(
-        "Groq API key (optional)",
-        value=st.session_state.api_key_groq_input,
-        type="password",
-        help="Used to generate natural-language explanations without overriding decision logic.",
-    )
-    st.session_state.api_key_groq_input = groq_key_input.strip()
+    st.session_state.api_key_groq = st.text_input("Groq API Key (optional)", value=st.session_state.api_key_groq, type="password")
+    st.session_state.unit = st.radio("Unit", ["°C", "°F"], horizontal=True)
 
     st.divider()
     st.markdown("### Personalization")
-    unit = st.radio("Temperature unit", ["°C", "°F"], horizontal=True, key="temperature_unit")
-    preference = st.selectbox(
-        "Advice style",
+    st.session_state.user_preference = st.selectbox(
+        "Advice Style",
         ["Conservative", "Balanced", "Relaxed"],
         index=["Conservative", "Balanced", "Relaxed"].index(st.session_state.user_preference),
-        help="Customizes personalized recommendation thresholds while leaving baseline risk intact.",
     )
-    st.session_state.user_preference = preference
 
-    adjustment = int(st.session_state.feedback_adjustment)
-    if adjustment > 0:
-        st.caption("⚡ Feedback memory: leaning one step more cautious")
-    elif adjustment < 0:
-        st.caption("⚡ Feedback memory: leaning one step more relaxed")
-    else:
-        st.caption("⚡ Feedback memory: standard selected style")
+    st.markdown("**Session & SQLite Memory**")
+    m_col1, m_col2 = st.columns(2)
+    if m_col1.button("↑ Cautious", use_container_width=True):
+        st.session_state.feedback_adjustment = 1
+        memory.save_user_preference(st.session_state.user_preference, 1)
+        st.toast("Saved: leaning more cautious")
+    if m_col2.button("↓ Relaxed", use_container_width=True):
+        st.session_state.feedback_adjustment = -1
+        memory.save_user_preference(st.session_state.user_preference, -1)
+        st.toast("Saved: leaning more relaxed")
 
-    st.divider()
-    demo_mode = st.toggle("Offline jury demo", value=True, help="Simulates structured scenario data without external network calls.")
-    if demo_mode:
-        demo_scenario = st.selectbox("Demonstration scenario", ["Moderate", "Low", "High"], index=0)
-        st.caption("Offline mode active: predictable, verified timelines for viva presentation.")
-    else:
-        demo_scenario = "Moderate"
-        st.caption("Live mode: queries OpenWeather API using provided key.")
+    if st.button("Reset Conversation", type="secondary", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.last_result = None
+        st.rerun()
 
-    st.divider()
-    with st.expander("Deterministic Risk Rules", expanded=False):
-        st.markdown(
-            f"""
-- **LOW:** Peak rain probability < {LOW_THRESHOLD:.0%}
-- **MODERATE:** {LOW_THRESHOLD:.0%} to < {HIGH_THRESHOLD:.0%}
-- **HIGH:** {HIGH_THRESHOLD:.0%} and above
 
-*Rule:* Decision logic remains strictly deterministic. An LLM explains, but never decides or overrides classifications.
-"""
-        )
+# ---------- Slim Header ----------
+st.markdown(
+    """
+<div class="top-nav">
+    <div class="brand-title">
+        ☂ umbrella. <span>planning intelligence</span>
+    </div>
+    <div>
+        <span class="badge badge-mono">agentic ai</span>
+    </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
 
-# ---------- Activity Planning Form ----------
-with st.container():
-    st.markdown('<div class="hero-eyebrow">Context-Aware Activity Planner</div>', unsafe_allow_html=True)
-    with st.form("planning_form", clear_on_submit=False):
-        row1_col1, row1_col2, row1_col3 = st.columns([1.4, 1.2, 1.2])
-        with row1_col1:
-            location_val = st.text_input(
-                "Destination / City",
-                value=st.session_state.last_location,
-                placeholder="e.g. Pune, IN",
-            )
-        with row1_col2:
-            activity_options = ["College", "Office commute", "Walking", "Outdoor event", "Travel", "Custom activity"]
-            act_idx = activity_options.index(st.session_state.activity_type) if st.session_state.activity_type in activity_options else 0
-            activity_val = st.selectbox("Activity Type", activity_options, index=act_idx)
-        with row1_col3:
-            flex_options = [0, 1, 2, 3, 4]
-            flex_val = st.selectbox(
-                "Allowed Schedule Flexibility",
-                flex_options,
-                index=flex_options.index(st.session_state.flexibility_hours) if st.session_state.flexibility_hours in flex_options else 2,
-                format_func=lambda x: "Fixed timing (±0h)" if x == 0 else f"±{x} hours flexible",
-                help="Allows Adaptive Plan Comparison to evaluate lower-risk alternative time windows.",
-            )
 
-        row2_col1, row2_col2, row2_col3 = st.columns([1, 1, 1.2], vertical_alignment="bottom")
-        with row2_col1:
-            start_val = st.text_input("Start Time", value=st.session_state.start_time, help="e.g. 09:00 or 9:00 AM")
-        with row2_col2:
-            end_val = st.text_input("End Time", value=st.session_state.end_time, help="e.g. 16:00 or 4:00 PM")
-        with row2_col3:
-            submitted = st.form_submit_button("Plan & Evaluate Weather  →", type="primary", use_container_width=True)
-
-if submitted:
-    if not location_val.strip():
-        st.warning("Please provide a city name or location.")
-    elif not demo_mode and not st.session_state.api_key_owm_input:
-        st.error("OpenWeather API key is required for live forecasts. Add your key in the sidebar or toggle Offline jury demo.")
-    else:
-        st.session_state.last_location = location_val.strip()
-        st.session_state.activity_type = activity_val
-        st.session_state.start_time = start_val.strip()
-        st.session_state.end_time = end_val.strip()
-        st.session_state.flexibility_hours = flex_val
-
-        with st.spinner("Umbrella Planning Orchestrator executing agent workflow…"):
-            agent_result = run_agent(
-                location=location_val.strip(),
-                preference=preference,
-                caution_adjustment=int(st.session_state.feedback_adjustment),
-                activity_type=activity_val,
-                start_time=start_val.strip(),
-                end_time=end_val.strip(),
-                flexibility_hours=flex_val,
-                api_key_owm=st.session_state.api_key_owm_input,
-                api_key_groq=st.session_state.api_key_groq_input,
-                demo_mode=demo_mode,
-                demo_scenario=demo_scenario,
-            )
-
-        if agent_result.get("error") and agent_result.get("rain_probability") is None:
-            st.error(agent_result.get("explanation") or "Forecast lookup failed.")
-        else:
-            st.session_state.last_result = agent_result
-            append_history(agent_result, location_val.strip(), demo_mode)
-
-# ---------- Render Main Product Dashboard ----------
-result = st.session_state.last_result
-
-if not result:
-    # Initial state if not yet queried
-    # Run default demo query on first load to give immediate premium experience
-    result = run_agent(
-        location="Pune",
+# ---------- Execute Agent Workflow Helper ----------
+def execute_agent_for_plan(plan_ctx: dict) -> dict:
+    return run_agent(
+        location=plan_ctx["location"],
+        activity_type=plan_ctx["activity_type"],
+        start_time=plan_ctx["start_time"],
+        end_time=plan_ctx["end_time"],
+        flexibility_hours=plan_ctx.get("flexibility_hours", 3),
         preference=st.session_state.user_preference,
         caution_adjustment=int(st.session_state.feedback_adjustment),
-        activity_type=st.session_state.activity_type,
-        start_time=st.session_state.start_time,
-        end_time=st.session_state.end_time,
-        flexibility_hours=st.session_state.flexibility_hours,
-        demo_mode=True,
-        demo_scenario="Moderate",
+        api_key_owm=st.session_state.api_key_owm,
+        api_key_groq=st.session_state.api_key_groq,
+        demo_mode=st.session_state.demo_mode,
+        demo_scenario=st.session_state.demo_scenario,
     )
-    st.session_state.last_result = result
-    append_history(result, "Pune", True)
 
-is_demo = bool(result.get("demo_mode"))
-loc_name = str(result.get("location", st.session_state.last_location))
-act_name = str(result.get("activity_type", st.session_state.activity_type))
-start_t = str(result.get("start_time", st.session_state.start_time))
-end_t = str(result.get("end_time", st.session_state.end_time))
-full_pop = max(0.0, min(1.0, float(result.get("rain_probability", 0.0))))
-full_risk = str(result.get("risk_level", "MODERATE")).upper()
 
-act_analysis = result.get("activity_analysis") or {}
-act_pop = max(0.0, min(1.0, float(act_analysis.get("peak_pop", full_pop))))
-act_risk = str(act_analysis.get("risk_level", full_risk)).upper()
-temp_c = float(result.get("temperature", 0.0))
-temp_display = to_display_temp(temp_c, unit)
-wind_spd = float(result.get("wind_speed", 4.2))
+# ---------- Render Message Helper ----------
+def render_assistant_response(data: dict):
+    explanation = data.get("explanation", "")
+    act_analysis = data.get("activity_analysis") or {}
+    comp = data.get("plan_comparison") or {}
+    timeline = data.get("forecast_timeline") or []
+    trace = data.get("execution_trace") or []
+    unit = st.session_state.unit
 
-frame = make_timeline(result, unit)
-slot_count = len(frame)
-mean_pop = float(frame["Rain probability (%)"].mean() / 100) if slot_count else full_pop
-temp_col = f"Temperature ({unit})"
-temp_min = float(frame[temp_col].min()) if slot_count else temp_display
-temp_max = float(frame[temp_col].max()) if slot_count else temp_display
-mod_slots = int((frame["Rain probability (%)"] >= LOW_THRESHOLD * 100).sum()) if slot_count else 0
-high_slots = int((frame["Rain probability (%)"] >= HIGH_THRESHOLD * 100).sum()) if slot_count else 0
+    rec = data.get("personalized_recommendation", data.get("recommendation", "Plan prepared"))
+    act_pop = float(act_analysis.get("peak_pop", data.get("rain_probability", 0.0)))
+    act_risk = str(act_analysis.get("risk_level", data.get("risk_level", "LOW")))
+    temp = float(act_analysis.get("temp_max", data.get("temperature", 20.0)))
+    temp_disp = temp if unit == "°C" else temp * 9 / 5 + 32
+    conds = act_analysis.get("conditions", data.get("description", "Clear"))
+    time_lbl = f"{data.get('start_time', '09:00')} – {data.get('end_time', '17:00')}"
 
-comp_data = result.get("plan_comparison") or {}
-action_rec = result.get("personalized_recommendation", result.get("recommendation", "Carry an umbrella just in case"))
+    # Natural response text
+    st.write(explanation)
 
-# Hero Component: Daily Outlook & Actionable Decision
-st.markdown(
-    f"""
-<div class="hero-box">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+    # Inline Glass Card
+    st.markdown(
+        f"""
+<div class="inline-card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
-            <div class="hero-eyebrow">Tomorrow's Daily Outlook · {esc(result.get("forecast_date", "Pune"))}</div>
-            <div class="hero-title">Tomorrow in {esc(loc_name)}</div>
-            <div class="hero-meta">
-                <span>🎯 {esc(act_name)} ({esc(start_t)} – {esc(end_t)})</span>
+            <div class="rec-title">{esc(rec)}</div>
+            <div class="rec-meta">
+                <span>📍 {esc(data.get('location', 'Pune'))}</span>
                 <span>·</span>
-                <span>🌤️ {esc(act_analysis.get("conditions", result.get("description", "Partly cloudy")))}</span>
+                <span>🎯 {esc(data.get('activity_type', 'General'))} ({esc(time_lbl)})</span>
                 <span>·</span>
-                {get_risk_pill_html(act_risk)}
+                <span>🌤️ {esc(conds)} · {temp_disp:.1f}{unit}</span>
             </div>
         </div>
         <div>
-            <span class="pill {'pill-demo' if is_demo else 'pill-live'}">
-                {'🧪 OFFLINE DEMO' if is_demo else '⚡ LIVE SATELLITE FORECAST'}
-            </span>
+            {get_risk_badge_html(act_risk, act_pop)}
         </div>
     </div>
-    <div class="rec-card">
-        <div class="hero-eyebrow" style="color:#82B9EB">Primary Recommendation</div>
-        <div class="rec-big">{esc(action_rec)}</div>
-        <div class="rec-support">
-            Activity window overlaps with {act_pop:.0%} rain probability ({act_risk} risk).
-            Personalized with {esc(result.get("effective_preference", preference)).lower()} advice styling.
-        </div>
-    </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-# Four Compact High-Signal Metric Cards
-m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-m_col1.metric("Peak Rain Probability", f"{act_pop:.0%}", help="Peak rain risk during your requested activity window.")
-m_col2.metric("Peak Risk Period", result.get("peak_time_short", "3:00 PM"), help="Time slot with the highest expected precipitation.")
-m_col3.metric("Temperature Range", f"{temp_min:.0f}–{temp_max:.0f}{unit}", help="Daily minimum to maximum temperature across forecast slots.")
-m_col4.metric("Wind & Conditions", f"{wind_spd:.1f} m/s", help=f"Expected condition: {result.get('description', 'Clear')}")
-
-# ---------- Six Main Application Sections ----------
-tab_overview, tab_planner, tab_compare, tab_analytics, tab_agent, tab_memory = st.tabs([
-    "Overview",
-    "Activity Planner",
-    "Compare Plans",
-    "Forecast Analytics",
-    "Agent Intelligence",
-    "Memory & History",
-])
-
-# ==================== 1. OVERVIEW ====================
-with tab_overview:
-    ov_left, ov_right = st.columns([1.1, 1.4], gap="medium")
-    with ov_left:
-        with st.container():
-            st.markdown(
-                f"""
-<div class="glass-panel">
-    <div class="hero-eyebrow">Deterministic Baseline Decision</div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-        <div style="font-size:1.15rem; font-weight:800; color:#E8F3FF;">
-            {esc(result.get("recommendation", "—"))}
-        </div>
-        {get_risk_pill_html(full_risk)}
-    </div>
-    <div style="color:#9BAEC6; font-size:0.85rem; margin-top:8px;">
-        Evaluated on full-day peak rain probability ({full_pop:.0%}).
-        Baseline thresholds: LOW &lt;30% · MODERATE 30%–&lt;60% · HIGH ≥60%.
-    </div>
-</div>
-""",
-                unsafe_allow_html=True,
-            )
-
-        with st.container():
-            st.markdown(
-                f"""
-<div class="glass-panel">
-    <div class="hero-eyebrow">Peak Period Weather Facts</div>
-    <div style="font-size:1.9rem; font-weight:900; color:#E8F3FF; letter-spacing:-0.03em; margin:6px 0;">
-        {temp_display:.1f}{unit}
-    </div>
-    <div style="color:#9BAEC6; font-size:0.92rem;">
-        {esc(result.get("description", "Clear sky"))}
-    </div>
-    <div style="color:#82B9EB; font-size:0.82rem; margin-top:6px;">
-        Peak slot: {esc(result.get("peak_rain_time", result.get("peak_time_short", "Tomorrow")))}
-    </div>
-</div>
-""",
-                unsafe_allow_html=True,
-            )
-
-    with ov_right:
-        with st.container():
-            st.markdown('<div class="hero-eyebrow">Tomorrow At A Glance</div>', unsafe_allow_html=True)
-            if slot_count:
-                st.altair_chart(dark_rain_chart(frame), use_container_width=True)
-            else:
-                st.info("No timeline data returned for this location.")
-
-    with st.container():
-        st.markdown(
-            f"""
-<div class="insight-note">
-    <strong>Forecast Insights:</strong> {mod_slots} of {slot_count} forecast slots reach at least moderate rain risk ({LOW_THRESHOLD:.0%}).
-    The average slot probability is {mean_pop:.0%} (arithmetic mean across slots, not cumulative rain risk).
-    Temperature ranges between {temp_min:.1f}{unit} and {temp_max:.1f}{unit}.
-</div>
-""",
-            unsafe_allow_html=True,
-        )
-
-    with st.expander("AI & Rule-Based Explanation", expanded=False):
-        st.write(result.get("explanation", "Summary unavailable."))
-        if not result.get("llm_available"):
-            st.caption("Language model was offline or unconfigured; deterministic rule-based explainer was utilized.")
-
-# ==================== 2. ACTIVITY PLANNER ====================
-with tab_planner:
-    st.markdown('<div class="hero-eyebrow">Context-Aware Activity Analysis</div>', unsafe_allow_html=True)
-    st.markdown(
-        f"""
-<div class="insight-note">
-    Evaluating conditions specifically during your activity window: <strong>{esc(act_name)} ({esc(start_t)} – {esc(end_t)})</strong>.
-    OpenWeather provides 3-hour interval slots; Umbrella accurately maps your requested window across overlapping intervals.
 </div>
 """,
         unsafe_allow_html=True,
     )
 
-    act_col1, act_col2 = st.columns([1, 1], gap="medium")
-    with act_col1:
-        with st.container():
-            st.markdown(
-                f"""
-<div class="glass-panel">
-    <div class="hero-eyebrow">Activity Window Risk</div>
-    <div style="font-size:2.2rem; font-weight:900; color:#82B9EB; margin:8px 0;">
-        {act_pop:.0%}
+    # If Plan Comparison has better alternative or was specifically requested
+    if data.get("_show_comparison") or comp.get("has_better_alternative"):
+        orig_p = comp.get("original_plan") or {}
+        rec_p = comp.get("recommended_plan") or orig_p
+        has_better = bool(comp.get("has_better_alternative"))
+        reduction = float(comp.get("risk_reduction_pp", 0.0))
+
+        st.markdown(
+            f"""
+<div class="inline-card" style="border-color:rgba(255,255,255,0.18);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-secondary)">
+            {'⚡ Lower-Risk Window Suggested' if has_better else '✓ Original Timing Is Optimal'}
+        </span>
+        <span class="badge badge-mono">{reduction:.0f} pp risk reduction</span>
     </div>
-    <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-        {get_risk_pill_html(act_risk)}
-        <span style="color:#9BAEC6; font-size:0.85rem;">during {esc(act_name)}</span>
+    <div class="plan-comp-grid">
+        <div class="comp-box">
+            <div class="comp-box-label">Original Plan</div>
+            <div class="comp-box-time">{esc(orig_p.get('label', time_lbl))}</div>
+            <div class="comp-box-pop">{orig_p.get('peak_pop', act_pop):.0%} <span style="font-size:0.75rem; color:var(--text-muted)">peak rain</span></div>
+        </div>
+        <div class="comp-box {'better' if has_better else ''}">
+            <div class="comp-box-label">{'Suggested Alternative' if has_better else 'Current Plan'}</div>
+            <div class="comp-box-time">{esc(rec_p.get('label', time_lbl))}</div>
+            <div class="comp-box-pop">{rec_p.get('peak_pop', act_pop):.0%} <span style="font-size:0.75rem; color:var(--text-muted)">peak rain</span></div>
+        </div>
     </div>
-    <div style="color:#E8F3FF; font-weight:750; font-size:0.98rem;">
-        {esc(action_rec)}
+    <div style="font-size:0.86rem; color:var(--text-secondary); margin-top:8px;">
+        {esc(comp.get('why_this_plan', ''))}
     </div>
 </div>
 """,
-                unsafe_allow_html=True,
-            )
+            unsafe_allow_html=True,
+        )
 
-    with act_col2:
-        with st.container():
-            overlapping_slots = act_analysis.get("overlapping_slots") or []
-            slot_names = ", ".join([str(s.get("time")) for s in overlapping_slots]) or "All slots"
-            st.markdown(
-                f"""
-<div class="glass-panel">
-    <div class="hero-eyebrow">Window Coverage & Details</div>
-    <div style="color:#E8F3FF; font-size:0.95rem; margin-top:8px;">
-        <strong>Overlapping Slots:</strong> {esc(slot_names)}
-    </div>
-    <div style="color:#9BAEC6; font-size:0.88rem; margin-top:6px;">
-        <strong>Moderate/High Risk Slots in Window:</strong> {act_analysis.get("moderate_slots", 0)} moderate, {act_analysis.get("high_slots", 0)} high.
-    </div>
-    <div style="color:#9BAEC6; font-size:0.88rem; margin-top:6px;">
-        <strong>Window Temperature:</strong> {act_analysis.get("temp_min", 20):.1f}°C to {act_analysis.get("temp_max", 23):.1f}°C.
-    </div>
-    <div style="color:#9BAEC6; font-size:0.88rem; margin-top:6px;">
-        <strong>Peak Wind Speed:</strong> {act_analysis.get("wind_speed_max", 4.0):.1f} m/s.
-    </div>
+    # Compact Expanders for Tools
+    with st.expander("📊 View Forecast Timeline", expanded=bool(data.get("_show_analytics"))):
+        if timeline:
+            st.altair_chart(render_dark_timeline_chart(timeline, unit), use_container_width=True)
+            st.caption("Forecast-slot rain probabilities across tomorrow. Dashed markers denote 30% and 60% risk thresholds.")
+
+    with st.expander("🔍 View Agent Execution Trace", expanded=bool(data.get("_show_evidence"))):
+        if trace:
+            for s in trace:
+                st.markdown(
+                    f"""
+<div class="trace-row">
+    <div><strong>{s.get('step')}. {esc(s.get('title'))}</strong> <span style="color:#737373">({esc(s.get('tool_or_node'))})</span></div>
+    <div><span class="badge badge-mono">{s.get('duration_ms', 0)}ms</span> <span style="color:#70C8A0">✓</span></div>
 </div>
 """,
-                unsafe_allow_html=True,
-            )
+                    unsafe_allow_html=True,
+                )
 
-# ==================== 3. COMPARE PLANS (FLAGSHIP) ====================
-with tab_compare:
-    st.markdown('<div class="hero-eyebrow">Flagship Feature · Adaptive Plan Comparison</div>', unsafe_allow_html=True)
+
+# ---------- Main Content Area: Landing or Conversation ----------
+if not st.session_state.messages:
+    # Minimal Landing Experience
     st.markdown(
         """
-<div class="insight-note">
-    Umbrella evaluates alternative feasible time windows within your allowed scheduling flexibility (± hours).
-    When conditions improve significantly, it recommends shifting your activity to avoid rain peaks.
+<div class="landing-hero">
+    <h1>What are you planning?</h1>
+    <p>Weather-aware decisions, made simple.</p>
 </div>
 """,
         unsafe_allow_html=True,
     )
 
-    orig_p = comp_data.get("original_plan") or {}
-    rec_p = comp_data.get("recommended_plan") or orig_p
-    has_alt = bool(comp_data.get("has_better_alternative"))
-    reduction = float(comp_data.get("risk_reduction_pp", 0.0))
-
-    comp_left, comp_right = st.columns(2, gap="medium")
-    with comp_left:
-        orig_risk = orig_p.get("risk_level", "MODERATE")
-        orig_pop = float(orig_p.get("peak_pop", 0.0))
-        st.markdown(
-            f"""
-<div class="plan-card">
-    <div class="plan-header">
-        <span class="plan-title">Original Plan</span>
-        {get_risk_pill_html(orig_risk)}
-    </div>
-    <div class="plan-time">{esc(orig_p.get("label", "Selected time"))}</div>
-    <div class="plan-pop">{orig_pop:.0%} <span style="font-size:1rem; color:#9BAEC6; font-weight:600">peak rain risk</span></div>
-    <div style="color:#9BAEC6; font-size:0.88rem; margin-top:8px;">
-        Conditions: {esc(orig_p.get("conditions", "Not specified"))} · {esc(orig_p.get("temp_range", ""))}
-    </div>
-</div>
-""",
-            unsafe_allow_html=True,
-        )
-
-    with comp_right:
-        rec_risk = rec_p.get("risk_level", orig_risk)
-        rec_pop = float(rec_p.get("peak_pop", orig_pop))
-        st.markdown(
-            f"""
-<div class="plan-card recommended">
-    <div class="plan-header">
-        <span class="plan-title">{'Recommended Alternative' if has_alt else 'Optimal Plan Confirmed'}</span>
-        {get_risk_pill_html(rec_risk)}
-    </div>
-    <div class="plan-time">{esc(rec_p.get("label", "Recommended time"))}</div>
-    <div class="plan-pop">{rec_pop:.0%} <span style="font-size:1rem; color:#9BAEC6; font-weight:600">peak rain risk</span></div>
-    <div style="color:#9BAEC6; font-size:0.88rem; margin-top:8px;">
-        Conditions: {esc(rec_p.get("conditions", "Not specified"))} · {esc(rec_p.get("temp_range", ""))}
-    </div>
-</div>
-""",
-            unsafe_allow_html=True,
-        )
-
-    # Decision Evidence Panel
-    verdict_badge = '<span class="pill pill-live">LOWER-RISK WINDOW IDENTIFIED</span>' if has_alt else '<span class="pill pill-demo">ORIGINAL TIMING OPTIMAL</span>'
-    st.markdown(
-        f"""
-<div class="glass-panel" style="margin-top:14px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <div class="hero-eyebrow">Agent Decision Evidence · Why this plan?</div>
-        {verdict_badge}
-    </div>
-    <div style="font-size:1.05rem; font-weight:750; color:#E8F3FF; line-height:1.5;">
-        {esc(comp_data.get("why_this_plan", "Evaluation completed."))}
-    </div>
-    <div style="color:#9BAEC6; font-size:0.85rem; margin-top:10px;">
-        Candidate windows evaluated: {comp_data.get("candidates_evaluated", 1)} feasible options within allowed flexibility.
-        {f'Risk reduction: <strong>{reduction:.1f} percentage points</strong> lower probability.' if has_alt else ''}
-    </div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-    candidates_list = comp_data.get("candidates") or []
-    if len(candidates_list) > 1:
-        with st.expander("Inspect All Evaluated Candidate Windows", expanded=False):
-            cand_rows = []
-            for c in candidates_list:
-                cand_rows.append({
-                    "Window": c.get("label"),
-                    "Peak Rain Risk": f"{c.get('peak_pop', 0):.0%}",
-                    "Risk Band": c.get("risk_level"),
-                    "Conditions": c.get("conditions"),
-                    "Temperature": c.get("temp_range"),
-                })
-            st.dataframe(pd.DataFrame(cand_rows), use_container_width=True, hide_index=True)
-
-# ==================== 4. FORECAST ANALYTICS ====================
-with tab_analytics:
-    st.markdown('<div class="hero-eyebrow">Dark Analytical Visualizations</div>', unsafe_allow_html=True)
-    c_left, c_right = st.columns([1.4, 1], gap="medium")
-    with c_left:
-        with st.container():
-            st.markdown("### Rain Probability Curve")
-            st.caption("3-hour forecast slots. Dashed rules mark 30% (Moderate, Amber) and 60% (High, Coral) thresholds.")
-            if slot_count:
-                st.altair_chart(dark_rain_chart(frame), use_container_width=True)
-    with c_right:
-        with st.container():
-            st.markdown("### Risk Band Distribution")
-            st.caption("Number of forecast slots in each baseline risk category.")
-            if slot_count:
-                st.altair_chart(dark_risk_distribution_chart(frame), use_container_width=True)
-
-    t_left, t_right = st.columns([1.2, 1], gap="medium")
-    with t_left:
-        with st.container():
-            st.markdown("### Temperature Trend")
-            st.caption(f"Diurnal temperature curve ({unit}).")
-            if slot_count:
-                st.altair_chart(dark_temperature_chart(frame, unit), use_container_width=True)
-    with t_right:
-        with st.container():
-            st.markdown("### Slot-by-Slot Detail")
-            if slot_count:
-                visible = frame[["Time", "Rain probability (%)", temp_col, "Risk band", "Conditions"]].copy()
-                visible["Rain probability (%)"] = visible["Rain probability (%)"].map(lambda v: f"{v:.0f}%")
-                visible[temp_col] = visible[temp_col].map(lambda v: f"{v:.1f}°")
-                st.dataframe(visible, use_container_width=True, hide_index=True, height=240)
-
-    st.caption("Interpretation note: Forecast-slot probabilities are not cumulative and must not be added together.")
-
-# ==================== 5. AGENT INTELLIGENCE ====================
-with tab_agent:
-    st.markdown('<div class="hero-eyebrow">LangGraph Planning Orchestrator Execution Trace</div>', unsafe_allow_html=True)
-    st.caption("Real, auditable chronological execution trace showing genuine tool inputs, outputs, and status.")
-
-    traces = result.get("execution_trace") or []
-    for step in traces:
-        s_num = step.get("step", "—")
-        s_title = step.get("title", "Action")
-        s_node = step.get("tool_or_node", "Node")
-        s_status = step.get("status", "SUCCESS")
-        s_dur = step.get("duration_ms", 0.0)
-        s_in = step.get("inputs", {})
-        s_out = step.get("outputs", {})
-
-        st.markdown(
-            f"""
-<div class="trace-step">
-    <div class="trace-num">{s_num}</div>
-    <div style="flex-grow:1">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="trace-title">{esc(s_title)} <span style="color:#9BAEC6; font-weight:400; font-size:0.8rem">({esc(s_node)})</span></div>
-            <span class="pill pill-live">{esc(s_status)} · {s_dur}ms</span>
-        </div>
-        <div class="trace-desc">
-            Inputs: <code>{esc(str(s_in))}</code><br>
-            Outputs: <code>{esc(str(s_out))}</code>
-        </div>
-    </div>
-</div>
-""",
-            unsafe_allow_html=True,
-        )
-
-    st.markdown("### Three Collaborating Specialist Roles")
-    analyst_o = result.get("analyst_output") or {}
-    assessor_o = result.get("assessor_output") or {}
-    coord_o = result.get("coordinator_output") or {}
-    roles_info = [
-        ("01", "Forecast Analyst", f"Parsed {analyst_o.get('slots_reviewed', slot_count)} slots; peak rain {full_pop:.0%} at {result.get('peak_time_short')}.", analyst_o.get("status", "Complete")),
-        ("02", "Risk Assessor", f"Applied fixed thresholds; classified baseline as {assessor_o.get('risk_level', full_risk)}. Baseline: {assessor_o.get('baseline_recommendation')}.", assessor_o.get("status", "Complete")),
-        ("03", "Planning Coordinator", f"Coordinated with {coord_o.get('selected_preference', preference).lower()} style and feedback adjustment ({coord_o.get('feedback_adjustment', 0)}).", coord_o.get("status", "Complete")),
+    # Suggested prompt chips
+    st.markdown('<div class="chips-container">', unsafe_allow_html=True)
+    chip_cols = st.columns(4)
+    chips = [
+        "College tomorrow from 9 to 4",
+        "Evening walk around 5 PM",
+        "Outdoor event tomorrow afternoon",
+        "Office commute tomorrow morning",
     ]
-    for r_num, r_title, r_desc, r_stat in roles_info:
-        st.markdown(
-            f"""
-<div class="trace-step">
-    <div class="trace-num" style="background:rgba(233,191,114,0.18); color:#E9BF72">{r_num}</div>
-    <div>
-        <div class="trace-title">{esc(r_title)}</div>
-        <div class="trace-desc">{esc(r_desc)}</div>
-        <div style="color:#70C8A0; font-size:0.78rem; font-weight:750; margin-top:4px;">✓ {esc(r_stat)}</div>
-    </div>
-</div>
-""",
-            unsafe_allow_html=True,
-        )
+    selected_chip = None
+    for idx, (col, text) in enumerate(zip(chip_cols, chips)):
+        with col:
+            if st.button(text, key=f"chip_{idx}", use_container_width=True):
+                selected_chip = text
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    with st.expander("Inspect Raw Role Outputs (JSON for Viva)", expanded=False):
-        st.json({
-            "forecast_analyst": analyst_o,
-            "risk_assessor": assessor_o,
-            "planning_coordinator": coord_o,
-            "activity_analysis": act_analysis,
-            "plan_comparison": comp_data,
-        })
-
-# ==================== 6. MEMORY & HISTORY ====================
-with tab_memory:
-    st.markdown('<div class="hero-eyebrow">Feedback-Aware Memory & Persistence</div>', unsafe_allow_html=True)
-    st.caption("Transparent 1-step rule-based adjustment without changing baseline risk thresholds. Synchronized with SQLite persistent storage.")
-
-    fb_col1, fb_col2, fb_col3 = st.columns(3)
-    if fb_col1.button("↑ More cautious", use_container_width=True):
-        st.session_state.feedback_adjustment = 1
-        memory.save_user_preference(st.session_state.user_preference, 1)
-        memory.save_feedback_event("More cautious", loc_name)
-        st.session_state.feedback_message = "Saved: Recommendations will lean one step more cautious."
+    if selected_chip:
+        st.session_state.messages.append({"role": "user", "content": selected_chip})
+        new_plan, intent = parse_user_query(selected_chip, st.session_state.current_plan)
+        st.session_state.current_plan = new_plan
+        with st.spinner("Evaluating weather…"):
+            res = execute_agent_for_plan(new_plan)
+            res["_show_comparison"] = intent == "compare"
+            st.session_state.last_result = res
+            st.session_state.messages.append({"role": "assistant", "data": res})
         st.rerun()
 
-    if fb_col2.button("✓ Keep selected style", use_container_width=True):
-        st.session_state.feedback_adjustment = 0
-        memory.save_user_preference(st.session_state.user_preference, 0)
-        memory.save_feedback_event("Keep selected style", loc_name)
-        st.session_state.feedback_message = "Saved: Recommendations will use standard selected style."
+else:
+    # Render Conversation History
+    for msg in st.session_state.messages:
+        if msg["role"] == "user":
+            with st.chat_message("user"):
+                st.write(msg["content"])
+        elif msg["role"] == "assistant":
+            with st.chat_message("assistant"):
+                render_assistant_response(msg["data"])
+
+
+# ---------- Chat Input Handler ----------
+user_prompt = st.chat_input("Ask umbrella anything about your plans...")
+
+if user_prompt:
+    # 1. Append user prompt
+    st.session_state.messages.append({"role": "user", "content": user_prompt})
+
+    # 2. Parse intent & update context
+    new_plan, intent = parse_user_query(user_prompt, st.session_state.current_plan)
+    st.session_state.current_plan = new_plan
+
+    # 3. Handle special intents or standard plan
+    if intent == "reset":
+        st.session_state.messages = []
+        st.session_state.last_result = None
         st.rerun()
-
-    if fb_col3.button("↓ Less cautious", use_container_width=True):
-        st.session_state.feedback_adjustment = -1
-        memory.save_user_preference(st.session_state.user_preference, -1)
-        memory.save_feedback_event("Less cautious", loc_name)
-        st.session_state.feedback_message = "Saved: Recommendations will lean one step more relaxed."
+    elif intent == "why" and st.session_state.last_result:
+        res = dict(st.session_state.last_result)
+        res["_show_evidence"] = True
+        res["explanation"] = f"Here is the decision evidence: The peak rain probability is {res.get('activity_analysis', {}).get('peak_pop', 0):.0%}, classifying your {res.get('activity_type')} as {res.get('risk_level')} risk."
+        st.session_state.messages.append({"role": "assistant", "data": res})
         st.rerun()
-
-    if st.session_state.feedback_message:
-        st.success(st.session_state.feedback_message)
-
-    st.markdown(
-        f"""
-<div class="insight-note">
-    <strong>Effective Advice Style:</strong> {esc(result.get("effective_preference", preference))}.
-    <strong>Baseline Risk Thresholds:</strong> Preserved (LOW &lt;30%, MODERATE 30%–&lt;60%, HIGH ≥60%).
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("### SQLite Persistent Activity History")
-    sql_records = memory.get_activity_history(limit=15)
-    if sql_records:
-        sql_df = pd.DataFrame(sql_records)
-        st.dataframe(
-            sql_df[["location", "activity_type", "rain_probability", "risk_level", "checked_at", "recommendation"]],
-            use_container_width=True,
-            hide_index=True,
-        )
+    elif intent == "analytics" and st.session_state.last_result:
+        res = dict(st.session_state.last_result)
+        res["_show_analytics"] = True
+        res["explanation"] = f"Here is the forecast distribution and temperature curve for tomorrow in {res.get('location')}."
+        st.session_state.messages.append({"role": "assistant", "data": res})
+        st.rerun()
     else:
-        st.caption("No persistent records saved yet.")
-
-    st.markdown("### Current Session History")
-    history = list(reversed(st.session_state.weather_history))
-    if history:
-        hist_df = pd.DataFrame([
-            {
-                "Location": x["location"],
-                "Activity": x.get("activity", "General"),
-                "Window": x.get("time_window", "Full day"),
-                "Rain probability": f"{x['rain_probability']:.0%}",
-                "Risk": x["risk_level"],
-                "Checked at": x["checked_at"],
-                "Source": "Sample" if x["demo"] else "Live",
-            }
-            for x in history
-        ])
-        st.dataframe(hist_df, use_container_width=True, hide_index=True)
-    else:
-        st.caption("Session history is empty.")
-
-    if st.button("Clear All Memory (Session & SQLite)", type="secondary"):
-        st.session_state.weather_history = []
-        st.session_state.feedback_adjustment = 0
-        memory.clear_memory()
-        st.success("All persistent and session memory cleared.")
+        # Execute workflow
+        with st.spinner("Evaluating weather…"):
+            res = execute_agent_for_plan(new_plan)
+            res["_show_comparison"] = (intent == "compare")
+            st.session_state.last_result = res
+            st.session_state.messages.append({"role": "assistant", "data": res})
         st.rerun()
-
-# ---------- Footer ----------
-st.markdown(
-    """
-<div style="text-align:center; padding-top:28px; color:#9BAEC6; font-size:0.78rem;">
-    Umbrella 2.0 · Agentic AI System for Context-Aware Weather Planning · Academic Jury Demonstration · Streamlit + LangGraph
-</div>
-""",
-    unsafe_allow_html=True,
-)
