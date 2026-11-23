@@ -191,3 +191,27 @@ When a user requests schedule flexibility:
 - **No Shared State Mutation**: Functions take explicit credentials as arguments rather than writing user values into global `os.environ`.
 - **Exclusion in Version Control**: Local databases (`*.db`, `*.sqlite3`) and environment files (`.env`) are excluded in `.gitignore`.
 - **CORS Protection**: Restricted to authorized origins (`http://localhost:5173`, `http://127.0.0.1:8000`).
+
+---
+
+## 8. Interactive Location Indicator & Disambiguation Architecture
+
+### 8.1 Header Location Indicator
+The header features an interactive, compact location indicator:
+- Unconfirmed state displays `Choose location` with Lucide `MapPin` and `ChevronDown`.
+- Confirmed state displays canonical `City, Region, Country` (e.g., `Pune, Maharashtra, India`).
+- Truncates gracefully (`max-w-[130px]` to `max-w-[320px]`) on small mobile screens without causing layout overflow.
+
+### 8.2 Disambiguation & Geocoding Engine (`backend/services/geocoding_service.py`)
+- Queries OpenWeather Direct Geocoding API (`/geo/1.0/direct`) when keys are present.
+- Falls back to a rich, curated canonical dataset for offline demo mode and disambiguation benchmarking.
+- When multiple cities share a common name (e.g., London UK vs. London Canada, Paris France vs. Paris Texas, Springfield IL/MO/MA), all options are presented with their state/province and country for explicit user selection.
+
+### 8.3 Location Switching & Plan Continuity (`POST /api/chat/location`)
+- **No Active Plan**: Silently updates session `plan_context` without triggering unnecessary weather API requests.
+- **Active Plan Exists**:
+  1. Preserves user activity type (`College`, `Walking`, etc.), timing window (`09:00 - 17:00`), schedule flexibility, and advice preferences.
+  2. Invalidates stale forecast data from the previous city.
+  3. Retrieves fresh forecast data for the newly selected city.
+  4. Recalculates risk classification, specialist roles output, and alternative plan comparisons.
+  5. Appends an assistant update clearly distinguishing the new city from historical forecasts, ensuring prior messages retain their original location tags.

@@ -1,5 +1,17 @@
+export interface LocationItem {
+  name: string;
+  region?: string;
+  country: string;
+  country_code?: string;
+  lat?: number;
+  lon?: number;
+  timezone_offset?: number;
+  display_name: string;
+}
+
 export interface PlanContext {
-  location: string;
+  location?: string | null;
+  location_details?: LocationItem | null;
   activity_type: string;
   start_time: string;
   end_time: string;

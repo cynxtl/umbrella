@@ -65,7 +65,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                 <div className="flex items-center gap-2 flex-wrap text-xs text-text-secondary mt-1">
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="h-3 w-3 text-text-muted" />
-                    {data.plan_context?.location || 'Pune'}
+                    {data.plan_context?.location_details?.display_name || data.plan_context?.location || 'Location'}
                   </span>
                   <span>·</span>
                   <span className="inline-flex items-center gap-1">

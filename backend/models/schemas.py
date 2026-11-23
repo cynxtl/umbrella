@@ -4,8 +4,19 @@ from __future__ import annotations
 from typing import Optional, List, Dict, Any, Literal
 from pydantic import BaseModel, Field
 
+class LocationItem(BaseModel):
+    name: str
+    region: Optional[str] = None
+    country: str
+    country_code: Optional[str] = ""
+    lat: Optional[float] = 0.0
+    lon: Optional[float] = 0.0
+    timezone_offset: Optional[int] = 0
+    display_name: str
+
 class PlanContext(BaseModel):
-    location: str = "Pune"
+    location: Optional[str] = None
+    location_details: Optional[LocationItem] = None
     activity_type: str = "General"
     start_time: str = "09:00"
     end_time: str = "17:00"
@@ -97,3 +108,24 @@ class SessionHistoryResponse(BaseModel):
 class UserPreferenceUpdate(BaseModel):
     preference: str = "Balanced"
     caution_adjustment: int = 0
+
+class LocationSwitchRequest(BaseModel):
+    session_id: str
+    location: str
+    region: Optional[str] = None
+    country: Optional[str] = None
+    country_code: Optional[str] = None
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    display_name: Optional[str] = None
+    demo_mode: Optional[bool] = True
+    demo_scenario: Optional[str] = "Moderate"
+
+class LocationSwitchResponse(BaseModel):
+    session_id: str
+    updated: bool
+    recalculated: bool
+    location: str
+    display_name: str
+    plan_context: PlanContext
+    message: Optional[Dict[str, Any]] = None

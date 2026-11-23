@@ -93,5 +93,87 @@ class BackendAPITests(unittest.TestCase):
         r_hist = self.client.get(f"/api/chat/history?session_id={session_id}")
         self.assertEqual(len(r_hist.json()["messages"]), 0)
 
+    def test_geocoding_search_and_ambiguity(self):
+        # 1. Ambiguous city: London should return both UK and Canada
+        resp = self.client.get("/api/weather/geocode?query=London")
+        self.assertEqual(resp.status_code, 200)
+        items = resp.json()
+        self.assertGreaterEqual(len(items), 2)
+        countries = {it["country"] for it in items}
+        self.assertIn("United Kingdom", countries)
+        self.assertIn("Canada", countries)
+        for item in items:
+            self.assertIn("name", item)
+            self.assertIn("region", item)
+            self.assertIn("country", item)
+            self.assertIn("display_name", item)
+
+        # 2. Specific city: Pune, Maharashtra, India
+        resp_pune = self.client.get("/api/weather/geocode?query=Pune")
+        self.assertEqual(resp_pune.status_code, 200)
+        pune_items = resp_pune.json()
+        self.assertGreaterEqual(len(pune_items), 1)
+        self.assertEqual(pune_items[0]["name"], "Pune")
+        self.assertEqual(pune_items[0]["region"], "Maharashtra")
+        self.assertEqual(pune_items[0]["country"], "India")
+
+    def test_location_switch_without_active_plan(self):
+        # Switch location before any conversation
+        resp = self.client.post("/api/chat/location", json={
+            "session_id": "test_pre_chat",
+            "location": "Pune",
+            "region": "Maharashtra",
+            "country": "India",
+            "display_name": "Pune, Maharashtra, India",
+        })
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data["updated"])
+        self.assertFalse(data["recalculated"])
+        self.assertIsNone(data["message"])
+        self.assertEqual(data["plan_context"]["location"], "Pune")
+
+    def test_location_switch_with_active_plan_continuity(self):
+        # 1. Start conversation in Pune
+        r1 = self.client.post("/api/chat", json={
+            "message": "I have college tomorrow from 9 to 4. Will I need an umbrella?",
+            "location": "Pune",
+            "demo_mode": True,
+            "demo_scenario": "Moderate",
+        })
+        self.assertEqual(r1.status_code, 200)
+        session_id = r1.json()["session_id"]
+        d1 = r1.json()
+        self.assertEqual(d1["plan_context"]["location"], "Pune")
+
+        # 2. Switch location in header to Mumbai
+        r_switch = self.client.post("/api/chat/location", json={
+            "session_id": session_id,
+            "location": "Mumbai",
+            "region": "Maharashtra",
+            "country": "India",
+            "display_name": "Mumbai, Maharashtra, India",
+            "demo_mode": True,
+            "demo_scenario": "Moderate",
+        })
+        self.assertEqual(r_switch.status_code, 200)
+        d_switch = r_switch.json()
+        self.assertTrue(d_switch["updated"])
+        self.assertTrue(d_switch["recalculated"])
+        self.assertIsNotNone(d_switch["message"])
+        self.assertIn("Mumbai", d_switch["message"]["content"])
+        self.assertEqual(d_switch["plan_context"]["location"], "Mumbai")
+        self.assertEqual(d_switch["plan_context"]["activity_type"], "College")
+        self.assertEqual(d_switch["plan_context"]["start_time"], "09:00")
+        self.assertEqual(d_switch["plan_context"]["end_time"], "16:00")
+
+        # 3. Verify history preserves original Pune forecast while new message has Mumbai
+        r_hist = self.client.get(f"/api/chat/history?session_id={session_id}")
+        self.assertEqual(r_hist.status_code, 200)
+        messages = r_hist.json()["messages"]
+        self.assertEqual(len(messages), 3)  # User -> Assistant (Pune) -> Assistant (Mumbai update)
+        self.assertEqual(messages[1]["data"]["plan_context"]["location"], "Pune")
+        self.assertEqual(messages[2]["data"]["plan_context"]["location"], "Mumbai")
+
 if __name__ == "__main__":
     unittest.main()

@@ -18,7 +18,8 @@ class SessionMemory:
                 "session_id": new_id,
                 "messages": [],
                 "plan_context": {
-                    "location": "Pune",
+                    "location": None,
+                    "location_details": None,
                     "activity_type": "General",
                     "start_time": "09:00",
                     "end_time": "17:00",
@@ -60,7 +61,8 @@ class SessionMemory:
             pref, adj = sqlite_memory.load_user_preference()
             self._sessions[session_id]["messages"] = []
             self._sessions[session_id]["plan_context"] = {
-                "location": "Pune",
+                "location": None,
+                "location_details": None,
                 "activity_type": "General",
                 "start_time": "09:00",
                 "end_time": "17:00",

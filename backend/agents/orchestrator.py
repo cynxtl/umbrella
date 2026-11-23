@@ -23,6 +23,7 @@ from backend.agents.tools import (
 )
 from backend.services.risk_service import classify_risk, preference_advice, effective_preference
 from backend.services.planning_service import generate_recommendation, parse_time_str
+from backend.services.geocoding_service import get_location_details
 
 GROQ_MODEL = "openai/gpt-oss-20b"
 
@@ -62,11 +63,14 @@ def extract_intent_and_plan(query: str, current_ctx: Dict[str, Any]) -> Tuple[Di
         ctx["flexibility_hours"] = max(2, ctx.get("flexibility_hours", 3))
 
     # Location
-    loc_match = re.search(r"\b(?:in|for|at)\s+([a-zA-Z\s]+?)(?:\s+tomorrow|\s+from|\s+between|\?|\.|$)", query, re.IGNORECASE)
+    loc_match = re.search(r"\b(?:in|at|around|to)\s+([a-zA-Z\s]+?)(?:\s+tomorrow|\s+from|\s+between|\?|\.|$)", query, re.IGNORECASE)
+    if not loc_match:
+        loc_match = re.search(r"\b(?:for)\s+([a-zA-Z\s]+?)(?:\s+tomorrow|\s+from|\s+between|\?|\.|$)", query, re.IGNORECASE)
     if loc_match:
         loc = loc_match.group(1).strip()
-        if len(loc) > 2 and loc.lower() not in {"college", "office", "walk", "home", "work"}:
+        if len(loc) > 2 and loc.lower() not in {"college", "office", "walk", "home", "work", "a better time", "tomorrow", "an umbrella"}:
             ctx["location"] = loc.title()
+            ctx["location_details"] = get_location_details(loc)
 
     # Activity
     if re.search(r"\b(college|class|lecture|campus|university)\b", q):
@@ -128,6 +132,39 @@ def orchestrate_planning_workflow(
     # Step 1: Goal Interpreted
     t0 = time.perf_counter()
     new_ctx, intent = extract_intent_and_plan(user_prompt, current_context)
+    if new_ctx.get("location") and not new_ctx.get("location_details"):
+        new_ctx["location_details"] = get_location_details(new_ctx["location"])
+
+    if not new_ctx.get("location"):
+        return {
+            "session_id": session_id,
+            "message": "Please choose your location using the indicator in the header (or mention your city) so I can evaluate your weather conditions accurately.",
+            "intent": "location_prompt",
+            "plan_context": new_ctx,
+            "recommendation": "Location needed",
+            "personalized_recommendation": "Please choose your location in the header above to get started.",
+            "risk_level": "LOW",
+            "rain_probability": 0.0,
+            "temperature": 20.0,
+            "conditions": "Awaiting location",
+            "peak_rain_time": "N/A",
+            "wind_speed": 0.0,
+            "forecast_timeline": [],
+            "plan_comparison": None,
+            "execution_trace": [{
+                "step": 1,
+                "title": "Goal interpreted",
+                "tool_or_node": "Planning Orchestrator",
+                "status": "AWAITING_LOCATION",
+                "duration_ms": round((time.perf_counter() - t0) * 1000, 2),
+                "inputs": {"prompt": user_prompt},
+                "outputs": {"status": "location_needed"},
+            }],
+            "roles": None,
+            "llm_available": False,
+            "demo_mode": demo_mode,
+        }
+
     trace.append({
         "step": 1,
         "title": "Goal interpreted",

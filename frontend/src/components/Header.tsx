@@ -1,7 +1,11 @@
 import React from 'react';
 import { Umbrella, SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { LocationIndicator } from './LocationIndicator';
+import { LocationItem } from '../types';
 
 interface HeaderProps {
+  currentLocation: LocationItem | null;
+  onSelectLocation: (loc: LocationItem) => void;
   demoMode: boolean;
   demoScenario: string;
   onOpenSettings: () => void;
@@ -9,13 +13,15 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  currentLocation,
+  onSelectLocation,
   demoMode,
   demoScenario,
   onOpenSettings,
   onResetChat,
 }) => {
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.08] bg-black/80 px-6 py-4 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.08] bg-black/80 px-4 sm:px-6 py-3.5 backdrop-blur-md">
       <div className="flex items-center gap-2.5">
         <Umbrella className="h-5 w-5 text-white" strokeWidth={2.2} />
         <span className="text-base font-semibold tracking-tight text-white">
@@ -23,9 +29,14 @@ export const Header: React.FC<HeaderProps> = ({
         </span>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <LocationIndicator
+          currentLocation={currentLocation}
+          onSelectLocation={onSelectLocation}
+        />
+
         {demoMode && (
-          <span className="hidden sm:inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.04] px-2.5 py-0.5 text-xs text-text-secondary font-medium">
+          <span className="hidden md:inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.04] px-2.5 py-0.5 text-xs text-text-secondary font-medium">
             Demo · {demoScenario}
           </span>
         )}

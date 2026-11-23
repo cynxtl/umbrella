@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Message } from './types';
+import { Message, LocationItem } from './types';
 import { Header } from './components/Header';
 import { WelcomeView } from './components/WelcomeView';
 import { ChatComposer } from './components/ChatComposer';
@@ -12,6 +12,9 @@ export function App() {
   const [sessionId, setSessionId] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+
+  // Persistent confirmed location: null displays 'Choose location'
+  const [currentLocation, setCurrentLocation] = useState<LocationItem | null>(null);
 
   // Settings
   const [demoMode, setDemoMode] = useState<boolean>(true);
@@ -30,7 +33,7 @@ export function App() {
     }
     setSessionId(currentId);
 
-    // Fetch initial preferences from server
+    // Fetch initial preferences & history from server
     fetch('/api/sessions/preferences')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -48,6 +51,52 @@ export function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  const handleSelectLocation = async (loc: LocationItem) => {
+    setCurrentLocation(loc);
+    if (!sessionId) return;
+
+    try {
+      const response = await fetch('/api/chat/location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          location: loc.name,
+          region: loc.region,
+          country: loc.country,
+          country_code: loc.country_code,
+          lat: loc.lat,
+          lon: loc.lon,
+          display_name: loc.display_name,
+          demo_mode: demoMode,
+          demo_scenario: demoScenario,
+        }),
+      });
+
+      if (response.ok) {
+        const resData = await response.json();
+        // If an active plan was recalculated, append the updated assistant message
+        if (resData.recalculated && resData.message) {
+          const assistantMsg: Message = {
+            id: resData.message.id || Math.random().toString(36).substring(2, 9),
+            role: 'assistant',
+            content: resData.message.content,
+            timestamp:
+              resData.message.timestamp ||
+              new Date().toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            data: resData.message.data,
+          };
+          setMessages((prev) => [...prev, assistantMsg]);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update location:', err);
+    }
+  };
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -73,6 +122,7 @@ export function App() {
         body: JSON.stringify({
           message: text,
           session_id: sessionId,
+          location: currentLocation ? currentLocation.name : undefined,
           demo_mode: demoMode,
           demo_scenario: demoScenario,
           preference: preference,
@@ -84,6 +134,20 @@ export function App() {
       }
 
       const data = await response.json();
+
+      // Synchronize confirmed location if returned from agent
+      if (data && data.plan_context && data.plan_context.location) {
+        if (data.plan_context.location_details) {
+          setCurrentLocation(data.plan_context.location_details);
+        } else if (!currentLocation || currentLocation.name !== data.plan_context.location) {
+          setCurrentLocation({
+            name: data.plan_context.location,
+            country: 'India',
+            display_name: data.plan_context.location,
+          });
+        }
+      }
+
       const assistantMsgId = Math.random().toString(36).substring(2, 9);
       const assistantMsg: Message = {
         id: assistantMsgId,
@@ -116,6 +180,7 @@ export function App() {
 
   const handleResetChat = async () => {
     setMessages([]);
+    setCurrentLocation(null);
     if (sessionId) {
       try {
         await fetch(`/api/chat/reset?session_id=${sessionId}`, {
@@ -141,6 +206,8 @@ export function App() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-sans">
       <Header
+        currentLocation={currentLocation}
+        onSelectLocation={handleSelectLocation}
         demoMode={demoMode}
         demoScenario={demoScenario}
         onOpenSettings={() => setIsSettingsOpen(true)}
