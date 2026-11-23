@@ -186,5 +186,66 @@ class BackendAPITests(unittest.TestCase):
         self.assertEqual(messages[1]["data"]["plan_context"]["location"], "Pune")
         self.assertEqual(messages[2]["data"]["plan_context"]["location"], "Mumbai")
 
+    def test_route_general_weather(self):
+        resp = self.client.post("/api/chat", json={
+            "message": "What is the weather like in Pune?",
+            "location": "Pune",
+            "demo_mode": True,
+        })
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["intent"], "weather")
+        self.assertIsNone(data["plan_comparison"])
+        trace_titles = [s["title"] for s in data["execution_trace"]]
+        self.assertIn("Weather retrieved", trace_titles)
+        self.assertNotIn("Alternatives compared", trace_titles)
+
+    def test_route_why_explanation(self):
+        # First create a context
+        r1 = self.client.post("/api/chat", json={
+            "message": "Walk tomorrow from 9 to 11",
+            "location": "Pune",
+            "demo_mode": True,
+        })
+        session_id = r1.json()["session_id"]
+
+        # Now ask "Why?"
+        r_why = self.client.post("/api/chat", json={
+            "session_id": session_id,
+            "message": "Why did you recommend this?",
+            "demo_mode": True,
+        })
+        self.assertEqual(r_why.status_code, 200)
+        data = r_why.json()
+        self.assertEqual(data["intent"], "why")
+        self.assertIn("deterministic", data["message"].lower())
+        trace_titles = [s["title"] for s in data["execution_trace"]]
+        # Route D must not retrieve external weather or run plan comparison!
+        self.assertNotIn("Weather retrieved", trace_titles)
+        self.assertNotIn("Alternatives compared", trace_titles)
+
+    def test_route_preference_update(self):
+        resp = self.client.post("/api/chat", json={
+            "message": "I really hate getting wet, I'm very cautious",
+            "location": "Pune",
+            "demo_mode": True,
+        })
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["intent"], "preference")
+        self.assertEqual(data["plan_context"]["preference"], "Cautious")
+        trace_titles = [s["title"] for s in data["execution_trace"]]
+        self.assertIn("Memory updated", trace_titles)
+
+    def test_geocoding_country_search_india(self):
+        # Searching country "India" returns major Indian cities, not hamlets in Uganda or Texas
+        resp = self.client.get("/api/weather/geocode?query=India")
+        self.assertEqual(resp.status_code, 200)
+        items = resp.json()
+        self.assertGreaterEqual(len(items), 3)
+        for item in items:
+            self.assertEqual(item["country"], "India")
+            self.assertNotEqual(item["name"], "India")
+
 if __name__ == "__main__":
     unittest.main()

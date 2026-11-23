@@ -9,12 +9,21 @@ import memory as sqlite_memory
 
 def tool_weather_retrieval(
     location: str,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
     api_key: Optional[str] = None,
     demo_mode: bool = True,
     demo_scenario: str = "Moderate",
 ) -> Dict[str, Any]:
     """Explicit Tool 1: Retrieve validated forecast timeline."""
-    return fetch_weather(location=location, api_key=api_key, demo_mode=demo_mode, demo_scenario=demo_scenario)
+    return fetch_weather(
+        location=location,
+        lat=lat,
+        lon=lon,
+        api_key=api_key,
+        demo_mode=demo_mode,
+        demo_scenario=demo_scenario,
+    )
 
 def tool_risk_assessment(
     forecast_timeline: List[Dict[str, Any]],
@@ -53,3 +62,20 @@ def tool_memory_lookup(session_id: str) -> Dict[str, Any]:
         "stored_preference": pref,
         "caution_adjustment": adj,
     }
+
+def tool_memory_update(
+    session_id: str,
+    preference: Optional[str] = None,
+    caution_adjustment: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Explicit Tool 5: Update session and persistent memory."""
+    pref, adj = sqlite_memory.load_user_preference()
+    new_pref = preference if preference is not None else pref
+    new_adj = caution_adjustment if caution_adjustment is not None else adj
+    sqlite_memory.save_user_preference(new_pref, new_adj)
+    updates: Dict[str, Any] = {}
+    if preference is not None:
+        updates["preference"] = new_pref
+    if caution_adjustment is not None:
+        updates["caution_adjustment"] = new_adj
+    return session_store.update_plan_context(session_id, updates)

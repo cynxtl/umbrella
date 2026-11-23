@@ -33,12 +33,36 @@ export function App() {
     }
     setSessionId(currentId);
 
-    // Fetch initial preferences & history from server
+    // Fetch initial preferences from server
     fetch('/api/sessions/preferences')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && data.preference) {
           setPreference(data.preference);
+        }
+      })
+      .catch(() => {});
+
+    // Restore multi-turn conversation history and confirmed location
+    fetch(`/api/chat/history?session_id=${currentId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((history) => {
+        if (history && Array.isArray(history.messages) && history.messages.length > 0) {
+          setMessages(history.messages);
+        }
+        if (history && history.plan_context) {
+          if (history.plan_context.location_details) {
+            setCurrentLocation(history.plan_context.location_details);
+          } else if (history.plan_context.location) {
+            setCurrentLocation({
+              name: history.plan_context.location,
+              country: '',
+              display_name: history.plan_context.location,
+            });
+          }
+          if (history.plan_context.preference) {
+            setPreference(history.plan_context.preference);
+          }
         }
       })
       .catch(() => {});
@@ -214,7 +238,11 @@ export function App() {
         onResetChat={handleResetChat}
       />
 
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 pb-28 pt-4">
+      <main
+        className={`flex-1 w-full max-w-2xl mx-auto px-4 flex flex-col ${
+          messages.length === 0 ? 'pb-20' : 'pb-28 pt-4'
+        }`}
+      >
         {messages.length === 0 ? (
           <WelcomeView onSelectPrompt={handleSendMessage} />
         ) : (

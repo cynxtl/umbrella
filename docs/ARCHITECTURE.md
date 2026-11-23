@@ -128,24 +128,42 @@ umbrella/
 
 ---
 
-## 4. Request Lifecycle
+## 4. Intent-Aware LangGraph Routing Lifecycle
 
-1. **User Input**: User submits a message via the conversational composer (e.g. *"I have college tomorrow from 9 to 4. Will I need an umbrella?"*).
-2. **Frontend Dispatch**: React dispatches `POST /api/chat` with message, session ID, demo parameters, and advice preferences.
-3. **Session Context Lookup**: FastAPI checks `SessionMemory`. If this is a follow-up, existing location and activity parameters are retained.
-4. **Goal & Intent Interpretation**: Orchestrator parses activity type, destination, time window, and intent (`plan`, `compare`, `why`, `analytics`, `reset`).
-5. **Tool Execution**:
-   - `tool_memory_lookup`: Retrieves preference and caution adjustments.
-   - `tool_weather_retrieval`: Queries OpenWeather API (or offline demo scenario).
-   - `tool_risk_assessment`: Maps 09:00 – 16:00 to overlapping 3-hour forecast slots.
-   - `tool_plan_comparison`: Evaluates candidate time windows within allowed flexibility.
-6. **Specialist Role Collaboration**:
-   - `Forecast Analyst`: Formats meteorological facts.
-   - `Risk Assessor`: Applies deterministic thresholds.
-   - `Planning Coordinator`: Harmonizes with user advice style.
-7. **Explanation Generation**: Groq LLM (or deterministic fallback) summarizes the plan into natural, grounded text.
-8. **Trace Assembly**: Exact millisecond durations and input/output contracts are recorded in `execution_trace`.
-9. **Client Rendering**: React receives JSON payload, appends message to thread, and renders the inline weather card, comparison panel, and expandable tools.
+Umbrella uses an explicit, compiled LangGraph `StateGraph` that conditionally branches based on interpreted intent:
+
+```mermaid
+flowchart TD
+    Start([User Request]) --> InterpretIntent[Node: interpret_intent\nGoal & Intent Extraction]
+    
+    InterpretIntent --> RouteCheck{route_intent}
+    
+    RouteCheck -->|clarification| NodeClarification[Node: node_clarification\nAwaiting Location Prompt]
+    RouteCheck -->|why| NodeExplain[Node: node_explain\nDeterministic Rationale Retrieval]
+    RouteCheck -->|preference| NodePref[Node: node_preference\nMemory Update & Confirmation]
+    RouteCheck -->|weather| NodeWeather[Node: node_weather_only\nOverview without Comparison]
+    RouteCheck -->|plan| NodePlan[Node: node_plan\nActivity Risk Window Evaluation]
+    RouteCheck -->|compare| NodeCompare[Node: node_compare\nSliding Window Alternative Search]
+    
+    NodeClarification --> End([END])
+    NodeExplain --> End
+    NodePref --> End
+    NodeWeather --> End
+    NodePlan --> End
+    NodeCompare --> End
+```
+
+### Route Specifications:
+- **Route A (General Weather Query)**: Invokes `tool_weather_retrieval` with coordinate validation, classifies daily risk, and generates a concise weather overview. Does **not** invoke `tool_plan_comparison`.
+- **Route B (Activity Planning)**: Evaluates the specific activity window (`start_time` to `end_time`). Runs `tool_plan_comparison` only if rain risk is elevated or requested.
+- **Route C (Plan Comparison)**: Full sliding-window alternative search across allowed flexibility hours ($\pm F$), comparing original vs candidate window and computing risk reduction.
+- **Route D (Explanation / Why)**: Explains the decision using deterministic risk thresholds without refetching external weather APIs.
+- **Route E (Preference Update)**: Persists user comfort adjustments via `tool_memory_update` and acknowledges updated thresholds.
+- **Route F (Location Switch)**: Dynamically updates location context, invalidates prior forecast, and recalculates active plans.
+- **Route G (Clarification)**: Safely prompts user for location when missing, avoiding assumptions or false defaults.
+
+### Trace Instrumentation:
+Execution traces strictly record only the steps executed for the active route (e.g. Route D traces only `Goal interpreted` $\to$ `Memory looked up` $\to$ `Explanation delivered`, omitting irrelevant weather calls).
 
 ---
 

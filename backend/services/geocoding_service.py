@@ -68,15 +68,49 @@ COUNTRY_NAMES = {
     "ZA": "South Africa",
 }
 
+# Reverse lookup and common aliases
+COUNTRY_ALIASES: Dict[str, str] = {
+    "india": "India",
+    "in": "India",
+    "bharat": "India",
+    "united states": "United States",
+    "usa": "United States",
+    "us": "United States",
+    "america": "United States",
+    "united kingdom": "United Kingdom",
+    "uk": "United Kingdom",
+    "britain": "United Kingdom",
+    "england": "United Kingdom",
+    "germany": "Germany",
+    "de": "Germany",
+    "deutschland": "Germany",
+    "france": "France",
+    "fr": "France",
+    "japan": "Japan",
+    "jp": "Japan",
+    "nippon": "Japan",
+    "australia": "Australia",
+    "au": "Australia",
+    "canada": "Canada",
+    "ca": "Canada",
+    "singapore": "Singapore",
+    "sg": "Singapore",
+    "united arab emirates": "United Arab Emirates",
+    "uae": "United Arab Emirates",
+}
+for code, name in COUNTRY_NAMES.items():
+    COUNTRY_ALIASES[code.lower()] = name
+    COUNTRY_ALIASES[name.lower()] = name
+
 POPULAR_LOCATIONS: List[Dict[str, Any]] = [
     {"name": "Pune", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 18.5204, "lon": 73.8567, "timezone_offset": 19800, "display_name": "Pune, Maharashtra, India"},
     {"name": "Mumbai", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.0760, "lon": 72.8777, "timezone_offset": 19800, "display_name": "Mumbai, Maharashtra, India"},
     {"name": "New Delhi", "region": "Delhi", "country": "India", "country_code": "IN", "lat": 28.6139, "lon": 77.2090, "timezone_offset": 19800, "display_name": "New Delhi, Delhi, India"},
     {"name": "Bengaluru", "region": "Karnataka", "country": "India", "country_code": "IN", "lat": 12.9716, "lon": 77.5946, "timezone_offset": 19800, "display_name": "Bengaluru, Karnataka, India"},
-    {"name": "Hyderabad", "region": "Telangana", "country": "India", "country_code": "IN", "lat": 17.3850, "lon": 78.4867, "timezone_offset": 19800, "display_name": "Hyderabad, Telangana, India"},
     {"name": "London", "region": "England", "country": "United Kingdom", "country_code": "GB", "lat": 51.5074, "lon": -0.1278, "timezone_offset": 0, "display_name": "London, England, United Kingdom"},
     {"name": "New York", "region": "New York", "country": "United States", "country_code": "US", "lat": 40.7128, "lon": -74.0060, "timezone_offset": -18000, "display_name": "New York, New York, United States"},
     {"name": "Tokyo", "region": "Tokyo", "country": "Japan", "country_code": "JP", "lat": 35.6762, "lon": 139.6503, "timezone_offset": 32400, "display_name": "Tokyo, Tokyo, Japan"},
+    {"name": "Paris", "region": "Île-de-France", "country": "France", "country_code": "FR", "lat": 48.8566, "lon": 2.3522, "timezone_offset": 3600, "display_name": "Paris, Île-de-France, France"},
 ]
 
 def get_popular_locations() -> List[Dict[str, Any]]:
@@ -84,25 +118,20 @@ def get_popular_locations() -> List[Dict[str, Any]]:
 
 # Comprehensive canonical dataset for high-accuracy local matching & offline disambiguation
 CANONICAL_LOCATIONS: List[Dict[str, Any]] = [
-    # India - Maharashtra & Major Metros
-    {"name": "Pune", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 18.5204, "lon": 73.8567, "timezone_offset": 19800},
-    {"name": "Mumbai", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.0760, "lon": 72.8777, "timezone_offset": 19800},
-    {"name": "Nagpur", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 21.1458, "lon": 79.0882, "timezone_offset": 19800},
-    {"name": "Nashik", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.9975, "lon": 73.7898, "timezone_offset": 19800},
-    {"name": "Thane", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.2183, "lon": 72.9781, "timezone_offset": 19800},
-    {"name": "Navi Mumbai", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.0330, "lon": 73.0297, "timezone_offset": 19800},
-    {"name": "Kolhapur", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 16.7050, "lon": 74.2433, "timezone_offset": 19800},
-    {"name": "Aurangabad", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.8762, "lon": 75.3433, "timezone_offset": 19800},
-
-    # India - Other Major States
+    # India - Major Metros & States
     {"name": "New Delhi", "region": "Delhi", "country": "India", "country_code": "IN", "lat": 28.6139, "lon": 77.2090, "timezone_offset": 19800},
-    {"name": "Delhi", "region": "Delhi", "country": "India", "country_code": "IN", "lat": 28.7041, "lon": 77.1025, "timezone_offset": 19800},
+    {"name": "Mumbai", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.0760, "lon": 72.8777, "timezone_offset": 19800},
     {"name": "Bengaluru", "region": "Karnataka", "country": "India", "country_code": "IN", "lat": 12.9716, "lon": 77.5946, "timezone_offset": 19800},
+    {"name": "Pune", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 18.5204, "lon": 73.8567, "timezone_offset": 19800},
     {"name": "Hyderabad", "region": "Telangana", "country": "India", "country_code": "IN", "lat": 17.3850, "lon": 78.4867, "timezone_offset": 19800},
     {"name": "Chennai", "region": "Tamil Nadu", "country": "India", "country_code": "IN", "lat": 13.0827, "lon": 80.2707, "timezone_offset": 19800},
     {"name": "Kolkata", "region": "West Bengal", "country": "India", "country_code": "IN", "lat": 22.5726, "lon": 88.3639, "timezone_offset": 19800},
     {"name": "Ahmedabad", "region": "Gujarat", "country": "India", "country_code": "IN", "lat": 23.0225, "lon": 72.5714, "timezone_offset": 19800},
     {"name": "Jaipur", "region": "Rajasthan", "country": "India", "country_code": "IN", "lat": 26.9124, "lon": 75.7873, "timezone_offset": 19800},
+    {"name": "Nagpur", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 21.1458, "lon": 79.0882, "timezone_offset": 19800},
+    {"name": "Nashik", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.9975, "lon": 73.7898, "timezone_offset": 19800},
+    {"name": "Thane", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.2183, "lon": 72.9781, "timezone_offset": 19800},
+    {"name": "Navi Mumbai", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.0330, "lon": 73.0297, "timezone_offset": 19800},
     {"name": "Chandigarh", "region": "Punjab", "country": "India", "country_code": "IN", "lat": 30.7333, "lon": 76.7794, "timezone_offset": 19800},
     {"name": "Lucknow", "region": "Uttar Pradesh", "country": "India", "country_code": "IN", "lat": 26.8467, "lon": 80.9462, "timezone_offset": 19800},
     {"name": "Kochi", "region": "Kerala", "country": "India", "country_code": "IN", "lat": 9.9312, "lon": 76.2673, "timezone_offset": 19800},
@@ -112,23 +141,27 @@ CANONICAL_LOCATIONS: List[Dict[str, Any]] = [
     {"name": "Patna", "region": "Bihar", "country": "India", "country_code": "IN", "lat": 25.5941, "lon": 85.1376, "timezone_offset": 19800},
     {"name": "Surat", "region": "Gujarat", "country": "India", "country_code": "IN", "lat": 21.1702, "lon": 72.8311, "timezone_offset": 19800},
     {"name": "Dehradun", "region": "Uttarakhand", "country": "India", "country_code": "IN", "lat": 30.3165, "lon": 78.0322, "timezone_offset": 19800},
+    {"name": "Kolhapur", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 16.7050, "lon": 74.2433, "timezone_offset": 19800},
+    {"name": "Aurangabad", "region": "Maharashtra", "country": "India", "country_code": "IN", "lat": 19.8762, "lon": 75.3433, "timezone_offset": 19800},
 
-    # Ambiguity Test Cases: London, Paris, Springfield, Aberdeen
-    {"name": "London", "region": "England", "country": "United Kingdom", "country_code": "GB", "lat": 51.5074, "lon": -0.1278, "timezone_offset": 0},
-    {"name": "London", "region": "Ontario", "country": "Canada", "country_code": "CA", "lat": 42.9849, "lon": -81.2453, "timezone_offset": -18000},
-
-    {"name": "Paris", "region": "Île-de-France", "country": "France", "country_code": "FR", "lat": 48.8566, "lon": 2.3522, "timezone_offset": 3600},
-    {"name": "Paris", "region": "Texas", "country": "United States", "country_code": "US", "lat": 33.6609, "lon": -95.5555, "timezone_offset": -21600},
-
-    {"name": "Springfield", "region": "Illinois", "country": "United States", "country_code": "US", "lat": 39.7817, "lon": -89.6501, "timezone_offset": -21600},
-    {"name": "Springfield", "region": "Missouri", "country": "United States", "country_code": "US", "lat": 37.2090, "lon": -93.2923, "timezone_offset": -21600},
-    {"name": "Springfield", "region": "Massachusetts", "country": "United States", "country_code": "US", "lat": 42.1015, "lon": -72.5898, "timezone_offset": -18000},
-
-    # Global Metros
+    # United States - Major Metros
     {"name": "New York", "region": "New York", "country": "United States", "country_code": "US", "lat": 40.7128, "lon": -74.0060, "timezone_offset": -18000},
     {"name": "San Francisco", "region": "California", "country": "United States", "country_code": "US", "lat": 37.7749, "lon": -122.4194, "timezone_offset": -28800},
     {"name": "Seattle", "region": "Washington", "country": "United States", "country_code": "US", "lat": 47.6062, "lon": -122.3321, "timezone_offset": -28800},
     {"name": "Chicago", "region": "Illinois", "country": "United States", "country_code": "US", "lat": 41.8781, "lon": -87.6298, "timezone_offset": -21600},
+    {"name": "Los Angeles", "region": "California", "country": "United States", "country_code": "US", "lat": 34.0522, "lon": -118.2437, "timezone_offset": -28800},
+    {"name": "Austin", "region": "Texas", "country": "United States", "country_code": "US", "lat": 30.2672, "lon": -97.7431, "timezone_offset": -21600},
+    {"name": "Boston", "region": "Massachusetts", "country": "United States", "country_code": "US", "lat": 42.3601, "lon": -71.0589, "timezone_offset": -18000},
+
+    # Ambiguity Test Cases: London, Paris, Springfield
+    {"name": "London", "region": "England", "country": "United Kingdom", "country_code": "GB", "lat": 51.5074, "lon": -0.1278, "timezone_offset": 0},
+    {"name": "London", "region": "Ontario", "country": "Canada", "country_code": "CA", "lat": 42.9849, "lon": -81.2453, "timezone_offset": -18000},
+    {"name": "Paris", "region": "Île-de-France", "country": "France", "country_code": "FR", "lat": 48.8566, "lon": 2.3522, "timezone_offset": 3600},
+    {"name": "Paris", "region": "Texas", "country": "United States", "country_code": "US", "lat": 33.6609, "lon": -95.5555, "timezone_offset": -21600},
+    {"name": "Springfield", "region": "Illinois", "country": "United States", "country_code": "US", "lat": 39.7817, "lon": -89.6501, "timezone_offset": -21600},
+    {"name": "Springfield", "region": "Missouri", "country": "United States", "country_code": "US", "lat": 37.2090, "lon": -93.2923, "timezone_offset": -21600},
+
+    # Global Metros
     {"name": "Toronto", "region": "Ontario", "country": "Canada", "country_code": "CA", "lat": 43.6532, "lon": -79.3832, "timezone_offset": -18000},
     {"name": "Vancouver", "region": "British Columbia", "country": "Canada", "country_code": "CA", "lat": 49.2827, "lon": -123.1207, "timezone_offset": -28800},
     {"name": "Tokyo", "region": "Tokyo", "country": "Japan", "country_code": "JP", "lat": 35.6762, "lon": 139.6503, "timezone_offset": 32400},
@@ -154,17 +187,9 @@ def search_canonical(query: str, limit: int = 8) -> List[Dict[str, Any]]:
     if not q:
         return []
 
-    exact_matches = []
-    prefix_matches = []
-    substring_matches = []
-
-    for loc in CANONICAL_LOCATIONS:
-        name_lower = loc["name"].lower()
-        region_lower = (loc.get("region") or "").lower()
-        country_lower = loc["country"].lower()
+    def make_item(loc: Dict[str, Any]) -> Dict[str, Any]:
         disp_name = format_display_name(loc["name"], loc.get("region"), loc["country"])
-
-        item = {
+        return {
             "name": loc["name"],
             "region": loc.get("region"),
             "country": loc["country"],
@@ -174,6 +199,42 @@ def search_canonical(query: str, limit: int = 8) -> List[Dict[str, Any]]:
             "timezone_offset": loc.get("timezone_offset", 0),
             "display_name": disp_name,
         }
+
+    # Case 1: Query is a Country name or alias (e.g. "India", "USA", "UK")
+    if q in COUNTRY_ALIASES:
+        target_country = COUNTRY_ALIASES[q].lower()
+        country_cities = [
+            make_item(loc) for loc in CANONICAL_LOCATIONS
+            if loc["country"].lower() == target_country
+        ]
+        return country_cities[:limit]
+
+    # Case 2: Query is "City, Country" or "City, State" (e.g. "Pune, India", "Paris, France")
+    if "," in q:
+        parts = [p.strip() for p in q.split(",", 1)]
+        city_part = parts[0]
+        region_part = parts[1]
+        matches = []
+        for loc in CANONICAL_LOCATIONS:
+            name_lower = loc["name"].lower()
+            reg_lower = (loc.get("region") or "").lower()
+            cntry_lower = loc["country"].lower()
+            if (name_lower == city_part or name_lower.startswith(city_part)) and (
+                region_part in reg_lower or region_part in cntry_lower
+            ):
+                matches.append(make_item(loc))
+        if matches:
+            return matches[:limit]
+
+    exact_matches = []
+    prefix_matches = []
+    substring_matches = []
+
+    for loc in CANONICAL_LOCATIONS:
+        name_lower = loc["name"].lower()
+        region_lower = (loc.get("region") or "").lower()
+        country_lower = loc["country"].lower()
+        item = make_item(loc)
 
         if name_lower == q:
             exact_matches.append(item)
@@ -206,6 +267,12 @@ def search_locations(
     if len(q) < 2:
         return []
 
+    # If the user typed a country name (e.g. "India", "United States", "UK"),
+    # return the major cities in that country rather than obscure villages named after the country
+    q_lower = q.lower()
+    if q_lower in COUNTRY_ALIASES:
+        return search_canonical(q, limit=limit)
+
     resolved_key = api_key or os.environ.get("OPENWEATHER_API_KEY")
 
     if resolved_key:
@@ -225,6 +292,12 @@ def search_locations(
                         region = item.get("state")
                         raw_country = item.get("country", "")
                         country = COUNTRY_NAMES.get(raw_country, raw_country)
+
+                        # Filter out false matches where the city name happens to match a country alias
+                        # but is located in an unrelated foreign country (e.g. village "India" in Uganda/Belgium/Texas)
+                        if name.lower() in COUNTRY_ALIASES and country.lower() != COUNTRY_ALIASES[name.lower()].lower():
+                            continue
+
                         disp_name = format_display_name(name, region, country)
                         key = (name.lower(), (region or "").lower(), country.lower())
                         if key not in seen:

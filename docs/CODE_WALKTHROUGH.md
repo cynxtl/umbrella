@@ -47,18 +47,19 @@ This document explains the principal modules, classes, and functions in Umbrella
   - `generate_recommendation(activity_type, assessment, preference) -> str`: Contextual advice generator customized for commute, walking, outdoor events, and travel (free of emojis).
 
 ### 1.6 `backend/agents/orchestrator.py`
-- **Purpose**: Bounded LangGraph planning orchestrator.
+- **Purpose**: Compiled LangGraph `StateGraph` orchestrating intent routing, tools, specialist roles, and explanations.
 - **Key Functions**:
-  - `extract_intent_and_plan(query, current_ctx) -> tuple[dict, str]`: Natural language parser extracting activity type, location, time window, and intent.
-  - `orchestrate_planning_workflow(...) -> dict`: Executes the 7-step sequence:
-    1. Goal interpreted
-    2. Memory looked up
-    3. Weather retrieved
-    4. Risk evaluated (Analyst + Assessor roles)
-    5. Alternatives compared (Plan Comparison engine)
-    6. Recommendation generated (Coordinator role)
-    7. Explanation delivered (ChatGroq LLM or deterministic fallback)
-  - Records millisecond execution durations and verified input/output payloads.
+  - `extract_intent_and_plan(query, current_ctx) -> tuple[dict, str]`: Natural language parser extracting activity type, location, time window, and intent (`weather`, `plan`, `compare`, `why`, `preference`, `clarification`).
+  - `_build_planning_graph() -> CompiledStateGraph`: Compiles the dynamic StateGraph branching to:
+    - `node_interpret_intent`: Initial goal parsing and trace initialization.
+    - `node_clarification` (Route G): Prompts for location when missing.
+    - `node_explain` (Route D): Rationale explanation via stored memory without redundant weather calls.
+    - `node_preference` (Route E): Memory updates for user risk preference.
+    - `node_weather_only` (Route A): Overview forecast without plan comparison.
+    - `node_plan` (Route B): Specific activity window evaluation with conditional alternative search.
+    - `node_compare` (Route C): Sliding-window alternative search across flexibility hours.
+  - `orchestrate_planning_workflow(...) -> dict`: Invokes the compiled graph and returns structured `ChatResponse` dictionary.
+  - Records millisecond execution durations and verified input/output payloads for each executed step.
 
 ---
 

@@ -123,8 +123,22 @@ def extract_tomorrow_forecast(data: dict, now_utc: Optional[datetime] = None) ->
         "error": None,
     }
 
+def _is_valid_coord(lat: Optional[float], lon: Optional[float]) -> bool:
+    if lat is None or lon is None:
+        return False
+    if lat == 0.0 and lon == 0.0:
+        return False
+    try:
+        f_lat = float(lat)
+        f_lon = float(lon)
+        return -90.0 <= f_lat <= 90.0 and -180.0 <= f_lon <= 180.0
+    except (ValueError, TypeError):
+        return False
+
 def fetch_weather(
     location: str,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
     api_key: Optional[str] = None,
     demo_mode: bool = True,
     demo_scenario: str = "Moderate",
@@ -141,9 +155,15 @@ def fetch_weather(
         }
 
     try:
+        # Prefer validated coordinates when available to prevent location ambiguity
+        if _is_valid_coord(lat, lon):
+            params = {"lat": float(lat), "lon": float(lon), "appid": resolved_key, "units": "metric", "cnt": 40}
+        else:
+            params = {"q": location, "appid": resolved_key, "units": "metric", "cnt": 40}
+
         response = requests.get(
             OPENWEATHER_URL,
-            params={"q": location, "appid": resolved_key, "units": "metric", "cnt": 40},
+            params=params,
             timeout=8,
         )
         if response.status_code == 401:
@@ -153,8 +173,14 @@ def fetch_weather(
         if response.status_code == 429:
             return {"error": "OpenWeather rate limit exceeded.", "error_kind": "rate_limit", "retryable": True}
         response.raise_for_status()
-        forecast = extract_tomorrow_forecast(response.json())
+        data = response.json()
+        forecast = extract_tomorrow_forecast(data)
         forecast["location"] = location.strip()
+        if _is_valid_coord(lat, lon):
+            forecast["lat"] = float(lat)
+            forecast["lon"] = float(lon)
         return forecast
+    except requests.exceptions.Timeout:
+        return {"error": "Weather provider request timed out. Please retry.", "error_kind": "timeout", "retryable": True}
     except Exception as exc:
         return {"error": str(exc), "error_kind": "network", "retryable": True}

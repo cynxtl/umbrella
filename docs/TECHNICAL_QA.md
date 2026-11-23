@@ -66,8 +66,10 @@ Separating these roles ensures human preferences or LLM prompts cannot silently 
 
 ---
 
-### 9. Why migrate from Streamlit to React + FastAPI?
-**Answer:**
-- **Performance & State Management:** Streamlit re-executes the entire Python script from top to bottom on every user interaction, causing latency and UI resets. React maintains fine-grained client-side component state, allowing instant typing, smooth animations, and independent accordions.
-- **True Conversation-First UX:** React allows natural sticky chat composers, dynamic message bubbling, and nested Recharts visualizations without forced full-page rerenders.
-- **Production Decoupling:** Separating the frontend (React/Vite) from the backend (FastAPI/LangGraph) follows real-world SaaS architecture, enabling independent testing, CI/CD, and scalability.
+### 10. Why did typing a country name like 'India' initially return foreign towns, and how was it solved?
+**Answer:** 
+- **Root Cause**: OpenWeather's direct geocoding endpoint (`/geo/1.0/direct?q={query}`) is designed strictly for *city and municipality name* lookups, not country-level queries. When queried with `q=India`, OpenWeather searched for cities named "India", finding small hamlets whose literal settlement name is "India" (e.g. India in Lamwo, Uganda; India in Kapelebyong, Uganda; India in West Flanders, Belgium; and an unincorporated area named India in Ellis County, Texas). Because the UI displayed `loc.name` as the main title and `loc.region, loc.country` below it, it produced confusing listings like "India / Texas, United States".
+- **Solution**:
+  1. **Country Alias Detection**: Recognized queries matching sovereign country names and ISO codes (`India`, `IN`, `USA`, `UK`, `Japan`, etc.).
+  2. **Metropolitan Resolution**: When a user queries a country, Umbrella automatically serves the major economic and population centers in that country (e.g. New Delhi, Mumbai, Bengaluru, Pune, Hyderabad, Chennai, Kolkata, Ahmedabad for India).
+  3. **Foreign Homonym Filtering**: OpenWeather results where a city name matches a country alias but is located in an unrelated foreign territory are automatically suppressed unless explicitly qualified by state/region (e.g., "India, Texas").

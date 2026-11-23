@@ -42,6 +42,19 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     }
   };
 
+  const hasWeatherData =
+    data &&
+    data.conditions &&
+    data.conditions !== 'Awaiting location' &&
+    data.conditions !== 'Unavailable' &&
+    data.intent !== 'why' &&
+    data.intent !== 'preference' &&
+    data.intent !== 'location_prompt';
+
+  const shouldShowComparison =
+    data?.plan_comparison &&
+    (data.intent === 'compare' || data.plan_comparison.has_better_alternative === true);
+
   return (
     <div className="flex items-start gap-3 my-5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-white">
@@ -54,25 +67,30 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
           {message.content}
         </div>
 
-        {/* Inline Weather Card */}
-        {data && (
+        {/* Inline Weather Metadata Card (no duplicate recommendation text) */}
+        {hasWeatherData && (
           <div className="rounded-xl border border-white/[0.10] bg-white/[0.035] p-3.5 backdrop-blur-md">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-white">
-                  {data.personalized_recommendation || data.recommendation}
+                <div className="text-sm font-semibold text-white tracking-wide">
+                  {data.intent === 'weather'
+                    ? 'Weather Outlook'
+                    : `${data.plan_context?.activity_type || 'Activity'} Plan`}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap text-xs text-text-secondary mt-1">
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="h-3 w-3 text-text-muted" />
                     {data.plan_context?.location_details?.display_name || data.plan_context?.location || 'Location'}
                   </span>
-                  <span>·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-text-muted" />
-                    {data.plan_context?.activity_type || 'General'} (
-                    {data.plan_context?.start_time} – {data.plan_context?.end_time})
-                  </span>
+                  {data.plan_context?.start_time && data.plan_context?.end_time && (
+                    <>
+                      <span>·</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-text-muted" />
+                        {data.plan_context.start_time} – {data.plan_context.end_time}
+                      </span>
+                    </>
+                  )}
                   <span>·</span>
                   <span>
                     {data.conditions} · {formatTemp(data.temperature, unit)}
@@ -91,8 +109,8 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
           </div>
         )}
 
-        {/* Adaptive Plan Comparison Card if present */}
-        {data?.plan_comparison && (
+        {/* Adaptive Plan Comparison Card (only when requested or better alternative exists) */}
+        {shouldShowComparison && data.plan_comparison && (
           <AdaptiveComparisonCard comparison={data.plan_comparison} />
         )}
 

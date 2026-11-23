@@ -46,40 +46,48 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onSelectPrompt }) => {
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 pt-12 pb-24 text-center">
-      <div className="max-w-xl">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2.5">
+    <div className="flex flex-col justify-between flex-1 w-full max-w-2xl mx-auto py-6 sm:py-10 min-h-[calc(100vh-170px)]">
+      {/* Upper Zone: Greeting */}
+      <div className="text-center pt-2 sm:pt-4">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">
           What are you planning?
         </h1>
-        <p className="text-base text-text-secondary font-normal">
+        <p className="text-sm sm:text-base text-text-secondary font-normal">
           A little foresight for whatever&apos;s ahead.
         </p>
       </div>
 
-      <div className="mt-10 grid w-full max-w-2xl grid-cols-1 sm:grid-cols-2 gap-3 text-left">
-        {suggestions.map((item, idx) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={idx}
-              onClick={() => onSelectPrompt(item.prompt)}
-              className="group flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] p-3.5 hover:border-white/[0.22] hover:bg-white/[0.05] transition-all text-left"
-            >
-              <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-text-secondary group-hover:text-white transition-colors">
-                <Icon className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white group-hover:text-white">
-                  {item.title}
+      {/* Middle Zone: Suggestions Grid (Visually Centered) */}
+      <div className="my-auto py-6 w-full">
+        <div className="grid w-full grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+          {suggestions.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => onSelectPrompt(item.prompt)}
+                className="group flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] p-3.5 hover:border-white/[0.22] hover:bg-white/[0.05] transition-all text-left focus:outline-none focus:ring-1 focus:ring-white/30"
+              >
+                <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-text-secondary group-hover:text-white transition-colors shrink-0">
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div className="text-xs text-text-muted truncate mt-0.5">
-                  {item.desc}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-white group-hover:text-white truncate">
+                    {item.title}
+                  </div>
+                  <div className="text-xs text-text-muted truncate mt-0.5">
+                    {item.desc}
+                  </div>
                 </div>
-              </div>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Lower Zone buffer for composer spacing */}
+      <div className="h-6 sm:h-10" aria-hidden="true" />
     </div>
   );
 };
