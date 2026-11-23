@@ -1,53 +1,85 @@
-# Weather Planning Agent (Umbrella Advisor)
+# Weather Planning Agent — Jury 2 (Light Dashboard)
 
-LangGraph agent that checks the forecast and tells you whether to carry an umbrella.
+A Streamlit-only weather planning dashboard that answers the original question: **Should I carry an umbrella tomorrow in Pune?** It preserves the deterministic baseline thresholds and adds one working concept from Unit III and one from Unit IV.
 
-## Stack
-- **LLM**: OpenAI GPT-OSS 20B via **Groq API** (agentic, tool-use capable, 131K context)
-- **Weather data**: OpenWeather API (5-day/3-hour forecast endpoint)
-- **Orchestration**: LangGraph (stateful graph with retry loop)
-- **UI**: Streamlit
+## What is improved in this version
 
-## Setup
+- **Light visual theme:** white cards, soft grey canvas, restrained red accents and your editable umbrella SVG mark.
+- **Forecast analytics:** interactive rain-probability curve with visible 30% and 60% reference thresholds; temperature trend; risk-band distribution; and a slot-by-slot table.
+- **Decision insights:** peak risk interpretation, number of slots at moderate/high risk, average slot probability and forecast temperature range.
+- **More careful probability interpretation:** the average is labelled as the mean of forecast slots, not a cumulative all-day chance of rain. Probabilities are not added together.
+- **Session history analytics:** compare recent checks, chart recent probabilities and compare the same location across checks.
+- **Consistent offline demo scenarios:** Low, Moderate and High sample timelines now agree with their headline peak probabilities.
 
-```bash
+## Unit III — Feedback-aware session memory
+
+- Keeps recent weather checks and feedback in Streamlit session state.
+- Lets the user request more cautious advice, keep the selected style, or request less cautious advice.
+- Applies transparent, one-step rule-based adjustment to advice style during the current session.
+- Baseline risk thresholds are never modified. This is not model training or persistent memory.
+
+## Unit IV — Role-based collaborative workflow
+
+1. **Forecast Analyst** extracts forecast facts and peak timing.
+2. **Risk Assessor** applies the original fixed thresholds.
+3. **Planning Coordinator** combines risk, user preference and session feedback.
+
+Each role returns structured output that is passed to the next role. The dashboard shows the role hand-offs and an inspectable JSON view for the viva. These are collaborating software roles, not three independent LLMs.
+
+## Setup (Windows PowerShell)
+
+```powershell
+cd Weather_Planning_Agent_Jury2_Light_UI
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-cp .env.example .env
-# edit .env and add your GROQ_API_KEY and OPENWEATHER_API_KEY
+Copy-Item .env.example .env
 ```
 
-Get keys:
-- Groq: https://console.groq.com/keys
-- OpenWeather: https://openweathermap.org/api (free tier is enough)
+Add `OPENWEATHER_API_KEY` to `.env` for live forecasts. `GROQ_API_KEY` is optional. Without a Groq key, the app uses a rule-based explanation. The offline demo needs neither key.
 
 ## Run
 
-```bash
+```powershell
 streamlit run app.py
 ```
 
-Or test the agent standalone from the CLI:
+Streamlit is configured to launch in light mode through `.streamlit/config.toml`. All interface layout is Streamlit; Altair is used for interactive charts.
 
-```bash
-python agent.py "Pune"
+## Suggested jury demo
+
+1. Start with **Offline jury demo** enabled and select the Moderate scenario.
+2. Show the peak probability card and the rain-probability curve with 30% / 60% threshold lines.
+3. Open **Forecast analytics** and explain the risk distribution, temperature trend and slot table.
+4. Open **Agent & memory** and show the Forecast Analyst → Risk Assessor → Planning Coordinator hand-offs.
+5. Click **More cautious** and show personalized advice changing while baseline risk stays unchanged.
+6. Open **Session history** and compare repeated checks; then switch Low / Moderate / High scenarios.
+7. If API access is available, turn off offline demo and check a live forecast.
+
+## Tests
+
+```powershell
+python -m unittest -v
 ```
 
-## How it works
+The deterministic unit tests cover threshold boundaries, feedback adjustment, structured role hand-offs, forecast date filtering and scenario-consistent offline timelines.
 
+## Architecture
+
+```text
+Streamlit UI
+  -> LangGraph forecast retrieval (with transient-error retries)
+  -> Forecast Analyst
+  -> Risk Assessor (fixed thresholds)
+  -> Planning Coordinator (preference + session feedback)
+  -> Optional Groq explanation / rule-based fallback
+  -> Light Streamlit dashboard + Altair forecast analytics
 ```
-fetch_weather --(ok)--> decide --> explain --> END
-     |--(fail, retries left)--> loop back to fetch_weather
-     |--(fail, retries exhausted)--> error --> END
-```
 
-- **fetch_weather**: calls OpenWeather, pulls max rain probability (`pop`) over the next ~24h. Retries up to 3 times with a 1s backoff on failure.
-- **decide**: pure threshold logic, no LLM involved —
-  - `< 30%` → LOW → no umbrella
-  - `30–60%` → MODERATE → carry just in case
-  - `≥ 60%` → HIGH → definitely carry
-- **explain**: Groq LLM writes a short natural-language explanation of the *already-made* decision (doesn't get to override it).
-- **error**: if all retries fail, returns a graceful message instead of crashing.
+## Limitations
 
-## Notes
-- Decision logic is deterministic on purpose — the LLM explains, it doesn't decide. Keeps behavior predictable and easy to grade/demo.
-- `WeatherState` (TypedDict in `agent.py`) is the single object passed between all graph nodes.
+- OpenWeather forecast points are time slots (typically three hours), not minute-by-minute rainfall data.
+- Forecast-slot probabilities are not cumulative and must not be added together.
+- Feedback and recent checks are session-only; they are not stored in a database.
+- Demo values are simulated and labelled as such.
+- Baseline risk is deterministic. Personalized advice can differ, but it never overwrites the baseline risk category.

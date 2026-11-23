@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1152" height="768" viewBox="0 0 1152 768">
+  <title>Red and silver eight-panel umbrella emblem</title>
+  <desc>Editable vector recreation of the supplied umbrella logo. The background is transparent.</desc>
+  <defs>
+    <linearGradient id="redPanel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e34848"/>
+      <stop offset="0.18" stop-color="#bd3032"/>
+      <stop offset="0.72" stop-color="#921c20"/>
+      <stop offset="1" stop-color="#650e12"/>
+    </linearGradient>
+    <linearGradient id="silverPanel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5f5f5"/>
+      <stop offset="0.22" stop-color="#d7d7d7"/>
+      <stop offset="1" stop-color="#929292"/>
+    </linearGradient>
+    <linearGradient id="redHighlight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".95"/>
+      <stop offset=".3" stop-color="#ff4b50" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#ff4b50" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="silverHighlight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".95"/>
+      <stop offset=".45" stop-color="#fff" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="softGlow" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur stdDeviation="1.4"/>
+    </filter>
+  </defs>
+
+  <!-- Eight separate, editable panels. Black gutters are formed by the transparent gaps. -->
+  <g stroke="#050505" stroke-width="10" stroke-linejoin="round">
+    <!-- North -->
+    <path id="panel-north" fill="url(#redPanel)"
+      d="M576 432 L450 105 Q576 143 704 105 Z"/>
+    <path fill="none" stroke="url(#redHighlight)" stroke-width="7" stroke-linecap="round"
+      d="M458 113 Q576 148 696 113" />
+
+    <!-- North-east -->
+    <path id="panel-north-east" fill="url(#silverPanel)"
+      d="M576 432 L718 111 Q773 220 900 293 Z"/>
+    <path fill="none" stroke="url(#silverHighlight)" stroke-width="6" stroke-linecap="round"
+      d="M721 127 Q777 224 883 289"/>
+
+    <!-- East -->
+    <path id="panel-east" fill="url(#redPanel)"
+      d="M576 432 L902 304 Q864 432 902 560 Z"/>
+    <path fill="none" stroke="#ff4148" stroke-width="6" stroke-linecap="round"
+      d="M606 430 L894 315"/>
+
+    <!-- South-east -->
+    <path id="panel-south-east" fill="url(#silverPanel)"
+      d="M576 432 L900 571 Q778 633 718 752 Z"/>
+    <path fill="none" stroke="url(#silverHighlight)" stroke-width="6" stroke-linecap="round"
+      d="M606 449 L884 573"/>
+
+    <!-- South -->
+    <path id="panel-south" fill="url(#redPanel)"
+      d="M576 432 L704 758 Q576 720 450 758 Z"/>
+    <path fill="none" stroke="#ff333b" stroke-width="6" stroke-linecap="round"
+      d="M576 463 L696 746"/>
+
+    <!-- South-west -->
+    <path id="panel-south-west" fill="url(#silverPanel)"
+      d="M576 432 L434 752 Q378 634 252 571 Z"/>
+    <path fill="none" stroke="url(#silverHighlight)" stroke-width="6" stroke-linecap="round"
+      d="M556 450 L269 573"/>
+
+    <!-- West -->
+    <path id="panel-west" fill="url(#redPanel)"
+      d="M576 432 L250 560 Q288 432 250 304 Z"/>
+    <path fill="none" stroke="#ff3a42" stroke-width="6" stroke-linecap="round"
+      d="M545 430 L259 315"/>
+
+    <!-- North-west -->
+    <path id="panel-north-west" fill="url(#silverPanel)"
+      d="M576 432 L252 293 Q378 220 434 111 Z"/>
+    <path fill="none" stroke="url(#silverHighlight)" stroke-width="6" stroke-linecap="round"
+      d="M546 411 Q418 294 435 128"/>
+  </g>
+</svg>
