@@ -21,6 +21,10 @@ env/
 !.streamlit/config.toml
 .streamlit_cache/
 
+# Database
+*.db
+*.sqlite3
+
 # OS
 .DS_Store
 Thumbs.db
