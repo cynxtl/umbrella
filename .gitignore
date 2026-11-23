@@ -7,9 +7,16 @@ __pycache__/
 *$py.class
 *.so
 *.egg-info/
-dist/
 build/
 .eggs/
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+.vite/
+
+# Frontend production build is tracked for instant out-of-the-box execution:
+!frontend/dist/
 
 # Virtual environments
 .venv/
