@@ -5,7 +5,7 @@
 [![React](https://img.shields.io/badge/frontend-React%2018%20+%20Vite-61DAFB.svg)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/styling-Tailwind%20CSS-38B2AC.svg)](https://tailwindcss.com/)
 [![LangGraph](https://img.shields.io/badge/orchestration-LangGraph-orange.svg)](https://langchain-ai.github.io/langgraph/)
-[![Tests](https://img.shields.io/badge/tests-26%20passed-brightgreen.svg)](file:///test_agent.py)
+[![Tests](https://img.shields.io/badge/tests-33%20passed-brightgreen.svg)](file:///test_agent.py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -39,36 +39,66 @@ Umbrella embodies the five core pillars of an autonomous agent system:
 
 ## 3. System Architecture & Modern Tech Stack
 
-Umbrella 2.0 features a decoupled, production-grade architecture:
+Umbrella 2.0 features a decoupled, production-grade architecture powered by compiled LangGraph state graph routing:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    REACT 18 + VITE FRONTEND                 │
-│  Monochromatic Glassmorphism (Deep Black #000000)           │
-│  Lucide React Icons (No Emojis) · Recharts Probability Curve │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ JSON / HTTP REST
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                       FASTAPI BACKEND                       │
-│  FastAPI REST API · Pydantic v2 · CORS · Static Dist Serving │
-└──────────────┬───────────────────────────────┬──────────────┘
-               │                               │
-               ▼                               ▼
-┌──────────────────────────────┐ ┌─────────────────────────────┐
-│   LANGGRAPH ORCHESTRATOR     │ │   SQLITE MEMORY PERSISTENCE │
-│   7-Node Chronological Graph │ │   User Preferences & SQLite │
-│   Specialist Roles Hand-off  │ │   Activity Log (File-Safe)  │
-└──────────────┬───────────────┘ └─────────────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                  BOUNDED DETERMINISTIC TOOLS                 │
-│  1. tool_weather_retrieval (OpenWeather API + Offline Demo)  │
-│  2. tool_risk_assessment (Deterministic 30% / 60% Rule)      │
-│  3. tool_plan_comparison (Adaptive Candidate Sliding Window) │
-│  4. tool_memory_lookup (Preference & Feedback Recall)        │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    User(["User / Browser"]) <-->|HTTP REST / JSON| Frontend["React 18 + Vite Frontend<br/>Monochromatic Glassmorphism (#000000)<br/>Lucide React Icons · Recharts Curves"]
+
+    Frontend <-->|API Calls| FastAPI["FastAPI Application Server<br/>/api/chat · /api/weather · /api/sessions"]
+
+    FastAPI <--> SessionMem[("Session Memory Store<br/>In-Memory Multi-Turn Context")]
+    FastAPI <--> SQLiteDB[("SQLite Database<br/>umbrella_memory.db")]
+
+    FastAPI <--> Orchestrator["Planning Orchestrator<br/>Compiled LangGraph StateGraph"]
+
+    subgraph LangGraphRoutes ["Intent-Aware LangGraph Routing"]
+        Orchestrator --> Router{"Intent Router"}
+        Router -->|Route A| RouteWeather["General Weather Overview"]
+        Router -->|Route B| RoutePlan["Activity Risk Assessment"]
+        Router -->|Route C| RouteCompare["Adaptive Plan Comparison"]
+        Router -->|Route D| RouteExplain["Decision Rationale ('Why?')"]
+        Router -->|Route E| RoutePref["Preference & Comfort Update"]
+        Router -->|Route G| RouteClarify["Location Clarification"]
+    end
+
+    subgraph SpecialistRoles ["Specialist Collaboration Roles"]
+        RoleAnalyst["Forecast Analyst<br/>Fact Extraction"]
+        RoleAssessor["Risk Assessor<br/>Deterministic Thresholds"]
+        RoleCoordinator["Planning Coordinator<br/>Personalization & Advice"]
+    end
+
+    subgraph AgentTools ["Bounded Deterministic Tools"]
+        T1["tool_weather_retrieval<br/>OpenWeather API + Scenarios"]
+        T2["tool_risk_assessment<br/>Deterministic 30% / 60% Rule"]
+        T3["tool_plan_comparison<br/>Sliding Window Search (±F hrs)"]
+        T4["tool_memory_lookup<br/>Stored Preferences Recall"]
+        T5["tool_memory_update<br/>SQLite Preference Persistence"]
+    end
+
+    subgraph ExternalProviders ["External Services & LLM"]
+        OWM["OpenWeather API<br/>5-Day / 3-Hour Forecast"]
+        Groq["Groq API<br/>GPT-OSS 20B Summarization"]
+        Fallback["Deterministic Explainer<br/>Offline Rule-Based Fallback"]
+    end
+
+    RouteWeather --> T1
+    RouteWeather --> T2
+    RoutePlan --> T1
+    RoutePlan --> T2
+    RoutePlan --> SpecialistRoles
+    RouteCompare --> T1
+    RouteCompare --> T2
+    RouteCompare --> T3
+    RouteExplain --> T4
+    RoutePref --> T5
+
+    T1 <--> OWM
+    T4 <--> SQLiteDB
+    T5 <--> SQLiteDB
+
+    Orchestrator --> Groq
+    Orchestrator -.->|Fallback if Offline| Fallback
 ```
 
 ### Technical Specifications
@@ -197,11 +227,11 @@ streamlit run legacy/app.py
 Run both the modern backend API test suite and the legacy agent verification suite:
 
 ```powershell
-# 1. Run modern FastAPI & Orchestrator test suite (5 tests)
+# 1. Run modern FastAPI & Orchestrator test suite (12 tests)
 python -m unittest discover -s backend/tests -v
 
 # 2. Run comprehensive legacy agent & planning test suite (21 tests)
 python -m unittest test_agent.py -v
 ```
 
-**Total automated test coverage:** 26 passing tests covering deterministic boundaries, schedule window math, midnight crossing, plan comparison, memory persistence, offline scenario fidelity, and API error resilience.
+**Total automated test coverage:** 33 passing tests covering compiled LangGraph routing, deterministic boundaries, schedule window math, midnight crossing, plan comparison, memory persistence, offline scenario fidelity, and API error resilience.
