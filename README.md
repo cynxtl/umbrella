@@ -205,12 +205,3 @@ python -m unittest test_agent.py -v
 ```
 
 **Total automated test coverage:** 26 passing tests covering deterministic boundaries, schedule window math, midnight crossing, plan comparison, memory persistence, offline scenario fidelity, and API error resilience.
-
----
-
-## 8. Authors & Acknowledgments
-
-- **Lead Engineer & AI Architect:** Arnav (`arnavkme@gmail.com`)
-- **Repository:** [https://github.com/cynxtl/umbrella](https://github.com/cynxtl/umbrella)
-- **Course:** Agentic AI
-- **Frameworks:** React 18, FastAPI, LangGraph, Tailwind CSS, Recharts, OpenWeather API, Groq LLM
