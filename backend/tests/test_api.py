@@ -117,6 +117,17 @@ class BackendAPITests(unittest.TestCase):
         self.assertEqual(pune_items[0]["region"], "Maharashtra")
         self.assertEqual(pune_items[0]["country"], "India")
 
+        # 3. Default empty query returns popular cities with distinct city names
+        resp_default = self.client.get("/api/weather/geocode")
+        self.assertEqual(resp_default.status_code, 200)
+        default_items = resp_default.json()
+        self.assertGreaterEqual(len(default_items), 4)
+        names = [item["name"] for item in default_items]
+        self.assertIn("Pune", names)
+        self.assertIn("Mumbai", names)
+        # Verify that "India" is not the city name for every result
+        self.assertNotIn("India", names)
+
     def test_location_switch_without_active_plan(self):
         # Switch location before any conversation
         resp = self.client.post("/api/chat/location", json={

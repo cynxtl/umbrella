@@ -51,8 +51,8 @@ export const LocationIndicator: React.FC<LocationIndicatorProps> = ({
 
     const query = searchQuery.trim();
     if (!query) {
-      // Default initial suggestions
-      fetch('/api/weather/geocode?query=India')
+      // Default initial suggestions (curated popular cities)
+      fetch('/api/weather/geocode')
         .then((res) => (res.ok ? res.json() : []))
         .then((data) => setResults(data))
         .catch(() => setResults([]));
@@ -147,6 +147,10 @@ export const LocationIndicator: React.FC<LocationIndicatorProps> = ({
             {isSearching && (
               <Loader2 className="absolute right-2.5 top-2.5 h-3.5 w-3.5 animate-spin text-text-muted" />
             )}
+          </div>
+
+          <div className="text-[10px] font-medium uppercase tracking-wider text-text-muted px-1 mb-1">
+            {searchQuery.trim() ? 'Matching locations' : 'Suggested cities'}
           </div>
 
           <div className="max-h-[220px] overflow-y-auto space-y-1 pr-1 custom-scrollbar">
